@@ -43,7 +43,7 @@ func (p *DownloadCNI) Run() error {
 			return err
 		}
 
-		if err := h.Exec(fmt.Sprintf(`curl -sSLf %s | tar -C /opt/cni/bin/`, shellescape.Quote(b.url()))); err != nil {
+		if err := h.Exec(fmt.Sprintf(`curl -sSLf %s | tar -C /opt/cni/bin/ -xzf -`, shellescape.Quote(b.url()))); err != nil {
 			return err
 		}
 	}
