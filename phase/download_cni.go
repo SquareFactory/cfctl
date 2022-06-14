@@ -34,7 +34,7 @@ func (p *DownloadCNI) Prepare(config *v1beta1.Cluster) error {
 // Run the phase
 func (p *DownloadCNI) Run() error {
 	for _, h := range p.hosts {
-		if err := ensureDir(h, "/opt/bin/cni", "0755", "0"); err != nil {
+		if err := ensureDir(h, "/opt/cni/bin", "0755", "0"); err != nil {
 			return err
 		}
 
