@@ -81,7 +81,7 @@ func fetchLatestCNIVersion(h *cluster.Host) (cniBinary, error) {
 
 func (b cniBinary) url() string {
 	return fmt.Sprintf(
-		"https://github.com/containernetworking/plugins/releases/download/v%s/cni-plugins-%s-%s-%s.tgz",
+		"https://github.com/containernetworking/plugins/releases/download/v%s/cni-plugins-%s-%s-v%s.tgz",
 		strings.TrimPrefix(b.Version, "v"),
 		b.OS,
 		b.Arch,
