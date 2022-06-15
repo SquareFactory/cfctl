@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	retry "github.com/avast/retry-go"
 	log "github.com/sirupsen/logrus"
 )

@@ -1,75 +1,74 @@
 name: Go
 
-on: [ pull_request ]
+on: [pull_request]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.18
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
 
-    - name: Go modules cache
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-          ~/Library/Caches/go-build
-          %LocalAppData%\go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+      - name: Go modules cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v3.1.0
-      with:
-        version: latest
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3.1.0
+        with:
+          version: latest
 
-    - name: Build
-      run: make k0sctl
+      - name: Build
+        run: make cfctl
 
-    - name: Test
-      run: go test -v ./...
+      - name: Test
+        run: go test -v ./...
 
-    - name: Stash the compiled binary for further testing
-      uses: actions/upload-artifact@v2
-      with:
-        name: k0sctl
-        path: k0sctl
-        retention-days: 2
+      - name: Stash the compiled binary for further testing
+        uses: actions/upload-artifact@v2
+        with:
+          name: cfctl
+          path: cfctl
+          retention-days: 2
 
   build-all:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.18
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
 
-    - name: Go modules cache
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/go/pkg/mod
-          ~/.cache/go-build
-          ~/Library/Caches/go-build
-          %LocalAppData%\go-build
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+      - name: Go modules cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-    - name: Build all
-      run: make build-all
+      - name: Build all
+        run: make build-all
 
   smoke-basic:
     strategy:
@@ -91,13 +90,47 @@ jobs:
         with:
           go-version: 1.18
 
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Compiled binary cache","uses":"actions/download-artifact@v2","with":{"name":"k0sctl","path":"."}}
-      - {"name":"Make executable","run":"chmod +x k0sctl"}
-      - {"name":"K0sctl cache","uses":"actions/cache@v2","with":{"path":"/var/cache/k0sctl\n~/.cache/k0sctl\n!*.log\n","key":"k0sctl-cache"}}
-      - {"name":"Kubectl cache","uses":"actions/cache@v2","with":{"path":"smoke-test/kubectl\n","key":"kubectl-1.21.3"}}
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Docker Layer Caching For Footloose","uses":"satackey/action-docker-layer-caching@v0.0.11","continue-on-error":true}
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Compiled binary cache',
+          'uses': 'actions/download-artifact@v2',
+          'with': { 'name': 'cfctl', 'path': '.' },
+        }
+      - { 'name': 'Make executable', 'run': 'chmod +x cfctl' }
+      - {
+          'name': 'cfctl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "/var/cache/cfctl\n~/.cache/cfctl\n!*.log\n", 'key': 'cfctl-cache' },
+        }
+      - {
+          'name': 'Kubectl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "smoke-test/kubectl\n", 'key': 'kubectl-1.21.3' },
+        }
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Docker Layer Caching For Footloose',
+          'uses': 'satackey/action-docker-layer-caching@v0.0.11',
+          'continue-on-error': true,
+        }
 
       - name: Run smoke tests
         env:
@@ -116,13 +149,47 @@ jobs:
         with:
           go-version: 1.18
 
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Compiled binary cache","uses":"actions/download-artifact@v2","with":{"name":"k0sctl","path":"."}}
-      - {"name":"Make executable","run":"chmod +x k0sctl"}
-      - {"name":"K0sctl cache","uses":"actions/cache@v2","with":{"path":"/var/cache/k0sctl\n~/.cache/k0sctl\n!*.log\n","key":"k0sctl-cache"}}
-      - {"name":"Kubectl cache","uses":"actions/cache@v2","with":{"path":"smoke-test/kubectl\n","key":"kubectl-1.21.3"}}
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Docker Layer Caching For Footloose","uses":"satackey/action-docker-layer-caching@v0.0.11","continue-on-error":true}
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Compiled binary cache',
+          'uses': 'actions/download-artifact@v2',
+          'with': { 'name': 'cfctl', 'path': '.' },
+        }
+      - { 'name': 'Make executable', 'run': 'chmod +x cfctl' }
+      - {
+          'name': 'cfctl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "/var/cache/cfctl\n~/.cache/cfctl\n!*.log\n", 'key': 'cfctl-cache' },
+        }
+      - {
+          'name': 'Kubectl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "smoke-test/kubectl\n", 'key': 'kubectl-1.21.3' },
+        }
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Docker Layer Caching For Footloose',
+          'uses': 'satackey/action-docker-layer-caching@v0.0.11',
+          'continue-on-error': true,
+        }
 
       - name: Run smoke tests
         run: make smoke-files
@@ -139,13 +206,47 @@ jobs:
         with:
           go-version: 1.18
 
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Compiled binary cache","uses":"actions/download-artifact@v2","with":{"name":"k0sctl","path":"."}}
-      - {"name":"Make executable","run":"chmod +x k0sctl"}
-      - {"name":"K0sctl cache","uses":"actions/cache@v2","with":{"path":"/var/cache/k0sctl\n~/.cache/k0sctl\n!*.log\n","key":"k0sctl-cache"}}
-      - {"name":"Kubectl cache","uses":"actions/cache@v2","with":{"path":"smoke-test/kubectl\n","key":"kubectl-1.21.3"}}
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Docker Layer Caching For Footloose","uses":"satackey/action-docker-layer-caching@v0.0.11","continue-on-error":true}
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Compiled binary cache',
+          'uses': 'actions/download-artifact@v2',
+          'with': { 'name': 'cfctl', 'path': '.' },
+        }
+      - { 'name': 'Make executable', 'run': 'chmod +x cfctl' }
+      - {
+          'name': 'cfctl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "/var/cache/cfctl\n~/.cache/cfctl\n!*.log\n", 'key': 'cfctl-cache' },
+        }
+      - {
+          'name': 'Kubectl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "smoke-test/kubectl\n", 'key': 'kubectl-1.21.3' },
+        }
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Docker Layer Caching For Footloose',
+          'uses': 'satackey/action-docker-layer-caching@v0.0.11',
+          'continue-on-error': true,
+        }
 
       - name: Run smoke tests
         run: make smoke-dynamic
@@ -162,13 +263,47 @@ jobs:
         with:
           go-version: 1.18
 
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Compiled binary cache","uses":"actions/download-artifact@v2","with":{"name":"k0sctl","path":"."}}
-      - {"name":"Make executable","run":"chmod +x k0sctl"}
-      - {"name":"K0sctl cache","uses":"actions/cache@v2","with":{"path":"/var/cache/k0sctl\n~/.cache/k0sctl\n!*.log\n","key":"k0sctl-cache"}}
-      - {"name":"Kubectl cache","uses":"actions/cache@v2","with":{"path":"smoke-test/kubectl\n","key":"kubectl-1.21.3"}}
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Docker Layer Caching For Footloose","uses":"satackey/action-docker-layer-caching@v0.0.11","continue-on-error":true}
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Compiled binary cache',
+          'uses': 'actions/download-artifact@v2',
+          'with': { 'name': 'cfctl', 'path': '.' },
+        }
+      - { 'name': 'Make executable', 'run': 'chmod +x cfctl' }
+      - {
+          'name': 'cfctl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "/var/cache/cfctl\n~/.cache/cfctl\n!*.log\n", 'key': 'cfctl-cache' },
+        }
+      - {
+          'name': 'Kubectl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "smoke-test/kubectl\n", 'key': 'kubectl-1.21.3' },
+        }
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Docker Layer Caching For Footloose',
+          'uses': 'satackey/action-docker-layer-caching@v0.0.11',
+          'continue-on-error': true,
+        }
 
       - name: Run OS override smoke test
         run: make smoke-os-override
@@ -196,18 +331,52 @@ jobs:
         with:
           go-version: 1.18
 
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Compiled binary cache","uses":"actions/download-artifact@v2","with":{"name":"k0sctl","path":"."}}
-      - {"name":"Make executable","run":"chmod +x k0sctl"}
-      - {"name":"K0sctl cache","uses":"actions/cache@v2","with":{"path":"/var/cache/k0sctl\n~/.cache/k0sctl\n!*.log\n","key":"k0sctl-cache"}}
-      - {"name":"Kubectl cache","uses":"actions/cache@v2","with":{"path":"smoke-test/kubectl\n","key":"kubectl-1.21.3"}}
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Docker Layer Caching For Footloose","uses":"satackey/action-docker-layer-caching@v0.0.11","continue-on-error":true}
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Compiled binary cache',
+          'uses': 'actions/download-artifact@v2',
+          'with': { 'name': 'cfctl', 'path': '.' },
+        }
+      - { 'name': 'Make executable', 'run': 'chmod +x cfctl' }
+      - {
+          'name': 'cfctl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "/var/cache/cfctl\n~/.cache/cfctl\n!*.log\n", 'key': 'cfctl-cache' },
+        }
+      - {
+          'name': 'Kubectl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "smoke-test/kubectl\n", 'key': 'kubectl-1.21.3' },
+        }
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Docker Layer Caching For Footloose',
+          'uses': 'satackey/action-docker-layer-caching@v0.0.11',
+          'continue-on-error': true,
+        }
 
       - name: Run smoke tests
         env:
           LINUX_IMAGE: ${{ matrix.image }}
-          K0S_FROM:  ${{ matrix.k0s_from }}
+          K0S_FROM: ${{ matrix.k0s_from }}
         run: make smoke-upgrade
 
   smoke-reset:
@@ -228,13 +397,47 @@ jobs:
         with:
           go-version: 1.18
 
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Compiled binary cache","uses":"actions/download-artifact@v2","with":{"name":"k0sctl","path":"."}}
-      - {"name":"Make executable","run":"chmod +x k0sctl"}
-      - {"name":"K0sctl cache","uses":"actions/cache@v2","with":{"path":"/var/cache/k0sctl\n~/.cache/k0sctl\n!*.log\n","key":"k0sctl-cache"}}
-      - {"name":"Kubectl cache","uses":"actions/cache@v2","with":{"path":"smoke-test/kubectl\n","key":"kubectl-1.21.3"}}
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Docker Layer Caching For Footloose","uses":"satackey/action-docker-layer-caching@v0.0.11","continue-on-error":true}
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Compiled binary cache',
+          'uses': 'actions/download-artifact@v2',
+          'with': { 'name': 'cfctl', 'path': '.' },
+        }
+      - { 'name': 'Make executable', 'run': 'chmod +x cfctl' }
+      - {
+          'name': 'cfctl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "/var/cache/cfctl\n~/.cache/cfctl\n!*.log\n", 'key': 'cfctl-cache' },
+        }
+      - {
+          'name': 'Kubectl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "smoke-test/kubectl\n", 'key': 'kubectl-1.21.3' },
+        }
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Docker Layer Caching For Footloose',
+          'uses': 'satackey/action-docker-layer-caching@v0.0.11',
+          'continue-on-error': true,
+        }
 
       - name: Run smoke tests
         env:
@@ -259,13 +462,47 @@ jobs:
         with:
           go-version: 1.18
 
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Compiled binary cache","uses":"actions/download-artifact@v2","with":{"name":"k0sctl","path":"."}}
-      - {"name":"Make executable","run":"chmod +x k0sctl"}
-      - {"name":"K0sctl cache","uses":"actions/cache@v2","with":{"path":"/var/cache/k0sctl\n~/.cache/k0sctl\n!*.log\n","key":"k0sctl-cache"}}
-      - {"name":"Kubectl cache","uses":"actions/cache@v2","with":{"path":"smoke-test/kubectl\n","key":"kubectl-1.21.3"}}
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Docker Layer Caching For Footloose","uses":"satackey/action-docker-layer-caching@v0.0.11","continue-on-error":true}
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Compiled binary cache',
+          'uses': 'actions/download-artifact@v2',
+          'with': { 'name': 'cfctl', 'path': '.' },
+        }
+      - { 'name': 'Make executable', 'run': 'chmod +x cfctl' }
+      - {
+          'name': 'cfctl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "/var/cache/cfctl\n~/.cache/cfctl\n!*.log\n", 'key': 'cfctl-cache' },
+        }
+      - {
+          'name': 'Kubectl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "smoke-test/kubectl\n", 'key': 'kubectl-1.21.3' },
+        }
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Docker Layer Caching For Footloose',
+          'uses': 'satackey/action-docker-layer-caching@v0.0.11',
+          'continue-on-error': true,
+        }
 
       - name: Run smoke tests
         env:
@@ -284,13 +521,47 @@ jobs:
         with:
           go-version: 1.18
 
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Compiled binary cache","uses":"actions/download-artifact@v2","with":{"name":"k0sctl","path":"."}}
-      - {"name":"Make executable","run":"chmod +x k0sctl"}
-      - {"name":"K0sctl cache","uses":"actions/cache@v2","with":{"path":"/var/cache/k0sctl\n~/.cache/k0sctl\n!*.log\n","key":"k0sctl-cache"}}
-      - {"name":"Kubectl cache","uses":"actions/cache@v2","with":{"path":"smoke-test/kubectl\n","key":"kubectl-1.21.3"}}
-      - {"name":"Go modules cache","uses":"actions/cache@v2","with":{"path":"~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n","key":"${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}","restore-keys":"${{ runner.os }}-go-\n"}}
-      - {"name":"Docker Layer Caching For Footloose","uses":"satackey/action-docker-layer-caching@v0.0.11","continue-on-error":true}
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Compiled binary cache',
+          'uses': 'actions/download-artifact@v2',
+          'with': { 'name': 'cfctl', 'path': '.' },
+        }
+      - { 'name': 'Make executable', 'run': 'chmod +x cfctl' }
+      - {
+          'name': 'cfctl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "/var/cache/cfctl\n~/.cache/cfctl\n!*.log\n", 'key': 'cfctl-cache' },
+        }
+      - {
+          'name': 'Kubectl cache',
+          'uses': 'actions/cache@v2',
+          'with': { 'path': "smoke-test/kubectl\n", 'key': 'kubectl-1.21.3' },
+        }
+      - {
+          'name': 'Go modules cache',
+          'uses': 'actions/cache@v2',
+          'with':
+            {
+              'path': "~/go/pkg/mod\n~/.cache/go-build\n~/Library/Caches/go-build\n%LocalAppData%\\go-build\n",
+              'key': "${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}",
+              'restore-keys': "${{ runner.os }}-go-\n",
+            },
+        }
+      - {
+          'name': 'Docker Layer Caching For Footloose',
+          'uses': 'satackey/action-docker-layer-caching@v0.0.11',
+          'continue-on-error': true,
+        }
 
       - name: Run init smoke test
         run: make smoke-init

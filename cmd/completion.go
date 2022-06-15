@@ -15,9 +15,9 @@ var completionCommand = &cli.Command{
 	Description: `Generates a shell auto-completion script.
 
    Typical locations for the generated output are:
-    - Bash: /etc/bash_completion.d/k0sctl
-    - Zsh: /usr/local/share/zsh/site-functions/_k0sctl
-    - Fish: ~/.config/fish/completions/k0sctl.fish`,
+    - Bash: /etc/bash_completion.d/cfctl
+    - Zsh: /usr/local/share/zsh/site-functions/_cfctl
+    - Fish: ~/.config/fish/completions/cfctl.fish`,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "shell",
@@ -50,7 +50,7 @@ var completionCommand = &cli.Command{
 func prog() string {
 	p, err := os.Executable()
 	if err != nil || strings.HasSuffix(p, "main") {
-		return "k0sctl"
+		return "cfctl"
 	}
 	return path.Base(p)
 }
@@ -58,7 +58,7 @@ func prog() string {
 func bashTemplate() string {
 	return fmt.Sprintf(`#! /bin/bash
 
-_k0sctl_bash_autocomplete() {
+_cfctl_bash_autocomplete() {
   if [[ "${COMP_WORDS[0]}" != "source" ]]; then
     local cur opts base
     COMPREPLY=()
@@ -73,7 +73,7 @@ _k0sctl_bash_autocomplete() {
   fi
 }
 
-complete -o bashdefault -o default -o nospace -F _k0sctl_bash_autocomplete %s
+complete -o bashdefault -o default -o nospace -F _cfctl_bash_autocomplete %s
 `, prog())
 }
 
@@ -82,7 +82,7 @@ func zshTemplate() string {
 	p := prog()
 	return fmt.Sprintf(`#compdef %s
 
-_k0sctl_zsh_autocomplete() {
+_cfctl_zsh_autocomplete() {
   local -a opts
   local cur
   cur=${words[-1]}
@@ -101,6 +101,6 @@ _k0sctl_zsh_autocomplete() {
   return
 }
 
-compdef _k0sctl_zsh_autocomplete %s
+compdef _cfctl_zsh_autocomplete %s
 `, p, p)
 }

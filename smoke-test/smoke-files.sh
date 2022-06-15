@@ -1,13 +1,13 @@
 #!/bin/bash
 
-K0SCTL_TEMPLATE=${K0SCTL_TEMPLATE:-"k0sctl.yaml.tpl"}
+CFCTL_TEMPLATE=${CFCTL_TEMPLATE:-"cfctl.yaml.tpl"}
 
 set -e
 
 . ./smoke.common.sh
 trap cleanup EXIT
 
-envsubst < k0sctl-files.yaml.tpl > k0sctl.yaml
+envsubst <cfctl-files.yaml.tpl >cfctl.yaml
 
 deleteCluster
 createCluster
@@ -36,10 +36,10 @@ mkdir -p upload
 mkdir -p upload/nested
 mkdir -p upload_chmod
 
-head -c 8192 </dev/urandom > upload/toplevel.txt
-head -c 8192 </dev/urandom > upload/nested/nested.txt
-head -c 8192 </dev/urandom > upload/nested/exclude-on-glob
-cat << EOF > upload_chmod/script.sh
+head -c 8192 </dev/urandom >upload/toplevel.txt
+head -c 8192 </dev/urandom >upload/nested/nested.txt
+head -c 8192 </dev/urandom >upload/nested/exclude-on-glob
+cat <<EOF >upload_chmod/script.sh
 #!/bin/sh
 echo hello
 EOF
@@ -49,7 +49,7 @@ echo "* Creating test user"
 remoteCommand root@manager0 useradd test
 
 echo "* Starting apply"
-../k0sctl apply --config k0sctl.yaml --debug
+../cfctl apply --config cfctl.yaml --debug
 
 echo "* Verifying uploads"
 remoteCommand root@manager0 "apt-get update > /dev/null && apt-get install tree > /dev/null && tree -fp"
@@ -118,4 +118,3 @@ echo -n "[content] "
 echo "OK"
 
 echo "* Done"
-

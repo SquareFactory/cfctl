@@ -12,7 +12,7 @@ import (
 
 var versionCommand = &cli.Command{
 	Name:  "version",
-	Usage: "Output k0sctl version",
+	Usage: "Output cfctl version",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:   "machine-id",

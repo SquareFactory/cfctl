@@ -17,7 +17,7 @@ var Verbose bool
 
 var ctx = &segment.Context{
 	App: segment.AppInfo{
-		Name:      "k0sctl",
+		Name:      "cfctl",
 		Version:   version.Version,
 		Build:     version.GitCommit,
 		Namespace: "k0s",

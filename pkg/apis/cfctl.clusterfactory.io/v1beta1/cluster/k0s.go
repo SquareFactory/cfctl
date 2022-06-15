@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver"
-	k0sctl "github.com/SquareFactory/cfctl/version"
+	cfctl "github.com/SquareFactory/cfctl/version"
 	"github.com/alessio/shellescape"
 	"github.com/avast/retry-go"
 	"github.com/creasty/defaults"
@@ -109,7 +109,7 @@ func (k *K0s) SetDefaults() {
 		return
 	}
 
-	latest, err := version.LatestByPrerelease(k0sctl.IsPre() || k0sctl.Version == "0.0.0")
+	latest, err := version.LatestByPrerelease(cfctl.IsPre() || cfctl.Version == "0.0.0")
 	if err == nil {
 		k.Version = latest.String()
 		k.Metadata.VersionDefaulted = true

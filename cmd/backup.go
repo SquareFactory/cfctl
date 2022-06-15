@@ -6,7 +6,7 @@ import (
 
 	"github.com/SquareFactory/cfctl/analytics"
 	"github.com/SquareFactory/cfctl/phase"
-	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )

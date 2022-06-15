@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/dig"
 	"github.com/k0sproject/rig/exec"
 	"github.com/k0sproject/version"

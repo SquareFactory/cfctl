@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
-	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/gammazero/workerpool"
 	"github.com/k0sproject/version"
 	log "github.com/sirupsen/logrus"

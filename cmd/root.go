@@ -4,9 +4,9 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// App is the main urfave/cli.App for k0sctl
+// App is the main urfave/cli.App for cfctl
 var App = &cli.App{
-	Name:  "k0sctl",
+	Name:  "cfctl",
 	Usage: "k0s cluster management tool",
 	Flags: []cli.Flag{
 		debugFlag,

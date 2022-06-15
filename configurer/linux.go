@@ -87,13 +87,13 @@ func (l Linux) K0sJoinTokenPath() string {
 	return "/etc/k0s/k0stoken"
 }
 
-// K0sctlLockFilePath returns a path to a lock file
-func (l Linux) K0sctlLockFilePath(h os.Host) string {
+// CfctlLockFilePath returns a path to a lock file
+func (l Linux) CfctlLockFilePath(h os.Host) string {
 	if h.Exec("test -d /run/lock", exec.Sudo(h)) == nil {
-		return "/run/lock/k0sctl"
+		return "/run/lock/cfctl"
 	}
 
-	return "/tmp/k0sctl.lock"
+	return "/tmp/cfctl.lock"
 }
 
 // TempFile returns a temp file path

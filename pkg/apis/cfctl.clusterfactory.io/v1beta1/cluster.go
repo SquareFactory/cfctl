@@ -1,12 +1,12 @@
 package v1beta1
 
 import (
-	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 // APIVersion is the current api version
-const APIVersion = "k0sctl.k0sproject.io/v1beta1"
+const APIVersion = "cfctl.clusterfactory.io/v1beta1"
 
 // ClusterMetadata defines cluster metadata
 type ClusterMetadata struct {

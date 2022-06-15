@@ -1,11 +1,11 @@
 package phase
 
 import (
-	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	log "github.com/sirupsen/logrus"
 )
 
-// Unlock acquires an exclusive k0sctl lock on hosts
+// Unlock acquires an exclusive cfctl lock on hosts
 type Unlock struct {
 	GenericPhase
 	Cancel func()
