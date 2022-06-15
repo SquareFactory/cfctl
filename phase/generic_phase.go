@@ -1,8 +1,8 @@
 package phase
 
 import (
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
 )
 
 // GenericPhase is a basic phase which gets a config via prepare, sets it into p.Config

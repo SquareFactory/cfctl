@@ -9,7 +9,7 @@ endif
 ENVIRONMENT ?= development
 PREFIX = /usr/local
 
-LD_FLAGS = -s -w -X github.com/k0sproject/k0sctl/version.Environment=$(ENVIRONMENT) -X github.com/k0sproject/k0sctl/version.GitCommit=$(GIT_COMMIT) -X github.com/k0sproject/k0sctl/version.Version=$(K0SCTL_VERSION)
+LD_FLAGS = -s -w -X github.com/SquareFactory/cfctl/version.Environment=$(ENVIRONMENT) -X github.com/SquareFactory/cfctl/version.GitCommit=$(GIT_COMMIT) -X github.com/SquareFactory/cfctl/version.Version=$(K0SCTL_VERSION)
 BUILD_FLAGS = -trimpath -a -tags "netgo,osusergo,static_build" -installsuffix netgo -ldflags "$(LD_FLAGS) -extldflags '-static'"
 
 k0sctl: $(GO_SRCS)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/k0sproject/k0sctl/configurer"
+	"github.com/SquareFactory/cfctl/configurer"
 	"github.com/k0sproject/rig"
 	"github.com/k0sproject/rig/os"
 	"github.com/k0sproject/rig/os/registry"

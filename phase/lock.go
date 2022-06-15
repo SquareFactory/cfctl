@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
 	retry "github.com/avast/retry-go"
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/exec"
 	log "github.com/sirupsen/logrus"
 )

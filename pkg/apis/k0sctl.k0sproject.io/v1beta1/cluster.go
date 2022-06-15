@@ -1,8 +1,8 @@
 package v1beta1
 
 import (
+	"github.com/SquareFactory/cfctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
 )
 
 // APIVersion is the current api version

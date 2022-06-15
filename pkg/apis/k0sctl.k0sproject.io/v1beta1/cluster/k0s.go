@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver"
+	k0sctl "github.com/SquareFactory/cfctl/version"
 	"github.com/alessio/shellescape"
 	"github.com/avast/retry-go"
 	"github.com/creasty/defaults"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/k0sproject/dig"
-	k0sctl "github.com/k0sproject/k0sctl/version"
 	"github.com/k0sproject/rig/exec"
 	"github.com/k0sproject/version"
 	"gopkg.in/yaml.v2"

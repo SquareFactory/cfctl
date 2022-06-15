@@ -1,4 +1,4 @@
-module github.com/k0sproject/k0sctl
+module github.com/SquareFactory/cfctl
 
 go 1.18
 
