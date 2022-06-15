@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/creasty/defaults"
 	"github.com/k0sproject/dig"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
 	"github.com/k0sproject/rig"
 
 	"github.com/urfave/cli/v2"
@@ -146,7 +146,7 @@ func buildHosts(addresses []string, ccount int, user, keypath string) cluster.Ho
 var initCommand = &cli.Command{
 	Name:        "init",
 	Usage:       "Create a configuration template",
-	Description: "Outputs a new k0sctl configuration. When a list of addresses are provided, hosts are generated into the configuration. The list of addresses can also be provided via stdin.",
+	Description: "Outputs a new cfctl configuration. When a list of addresses are provided, hosts are generated into the configuration. The list of addresses can also be provided via stdin.",
 	ArgsUsage:   "[[user@]address[:port] ...]",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{

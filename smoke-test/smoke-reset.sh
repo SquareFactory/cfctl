@@ -1,6 +1,6 @@
 #!/bin/bash
 
-K0SCTL_CONFIG=${K0SCTL_CONFIG:-"k0sctl.yaml"}
+CFCTL_CONFIG=${CFCTL_CONFIG:-"cfctl.yaml"}
 
 set -e
 
@@ -10,7 +10,7 @@ trap cleanup EXIT
 deleteCluster
 createCluster
 echo "* Applying"
-../k0sctl apply --config "${K0SCTL_CONFIG}" --debug
+../cfctl apply --config "${CFCTL_CONFIG}" --debug
 echo "* Resetting"
-../k0sctl reset --config "${K0SCTL_CONFIG}" --debug --force
+../cfctl reset --config "${CFCTL_CONFIG}" --debug --force
 echo "* Done, cleaning up"

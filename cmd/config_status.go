@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	"github.com/k0sproject/rig/exec"
 
 	"github.com/urfave/cli/v2"

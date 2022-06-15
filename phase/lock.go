@@ -7,15 +7,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	retry "github.com/avast/retry-go"
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/exec"
 	log "github.com/sirupsen/logrus"
 )
 
-// Lock acquires an exclusive k0sctl lock on hosts
+// Lock acquires an exclusive cfctl lock on hosts
 type Lock struct {
 	GenericPhase
 	cfs        []func()
@@ -56,7 +56,7 @@ func (p *Lock) Run() error {
 
 func (p *Lock) startTicker(h *cluster.Host) error {
 	p.wg.Add(1)
-	lfp := h.Configurer.K0sctlLockFilePath(h)
+	lfp := h.Configurer.CfctlLockFilePath(h)
 	ticker := time.NewTicker(10 * time.Second)
 	ctx, cancel := context.WithCancel(context.Background())
 	p.m.Lock()
@@ -104,7 +104,7 @@ func (p *Lock) startLock(h *cluster.Host) error {
 }
 
 func (p *Lock) tryLock(h *cluster.Host) error {
-	lfp := h.Configurer.K0sctlLockFilePath(h)
+	lfp := h.Configurer.CfctlLockFilePath(h)
 
 	if err := h.Configurer.UpsertFile(h, lfp, p.instanceID); err != nil {
 		stat, err := h.Configurer.Stat(h, lfp, exec.Sudo(h))
@@ -117,7 +117,7 @@ func (p *Lock) tryLock(h *cluster.Host) error {
 		}
 		if content != p.instanceID {
 			if time.Since(stat.ModTime()) < 30*time.Second {
-				return fmt.Errorf("another instance of k0sctl is currently operating on the host")
+				return fmt.Errorf("another instance of cfctl is currently operating on the host")
 			}
 			_ = h.Configurer.DeleteFile(h, lfp)
 			return fmt.Errorf("removed existing expired lock file")

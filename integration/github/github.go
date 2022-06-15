@@ -58,10 +58,10 @@ func LatestK0sVersion(preok bool) (string, error) {
 	return strings.TrimPrefix(r.String(), "v"), nil
 }
 
-// LatestRelease returns the semantically sorted latest k0sctl version from github
+// LatestRelease returns the semantically sorted latest cfctl version from github
 func LatestRelease(preok bool) (Release, error) {
 	var releases []Release
-	if err := unmarshalURLBody("https://api.github.com/repos/k0sproject/k0sctl/releases?per_page=20&page=1", &releases); err != nil {
+	if err := unmarshalURLBody("https://api.github.com/repos/SquareFactory/cfctl/releases?per_page=20&page=1", &releases); err != nil {
 		return Release{}, err
 	}
 
@@ -79,7 +79,7 @@ func LatestRelease(preok bool) (Release, error) {
 	latest := versions[len(versions)-1].String()
 
 	for _, v := range releases {
-		if strings.TrimPrefix(v.TagName, "v") == latest {
+		if v.TagName == latest {
 			return v, nil
 		}
 	}

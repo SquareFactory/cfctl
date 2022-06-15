@@ -116,7 +116,7 @@ resource "hcloud_load_balancer_service" "load_balancer_service_8133" {
 }
 locals {
     k0s_tmpl = {
-        apiVersion = "k0sctl.k0sproject.io/v1beta1"
+        apiVersion = "cfctl.clusterfactory.io/v1beta1"
         kind = "cluster"
         spec = {
             hosts = [

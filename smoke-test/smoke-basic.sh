@@ -1,9 +1,8 @@
 #!/bin/bash
 
-K0SCTL_CONFIG=${K0SCTL_CONFIG:-"k0sctl.yaml"}
+CFCTL_CONFIG=${CFCTL_CONFIG:-"cfctl.yaml"}
 
 set -e
-
 
 . ./smoke.common.sh
 trap cleanup EXIT
@@ -12,14 +11,14 @@ deleteCluster
 createCluster
 
 echo "* Starting apply"
-../k0sctl apply --config "${K0SCTL_CONFIG}" --debug
+../cfctl apply --config "${CFCTL_CONFIG}" --debug
 echo "* Apply OK"
 
 echo "* Verify hooks were executed on the host"
 footloose ssh root@manager0 -- grep -q hello apply.hook
 
-echo "* Verify 'k0sctl kubeconfig' output includes 'data' block"
-../k0sctl kubeconfig --config k0sctl.yaml | grep -v -- "-data"
+echo "* Verify 'cfctl kubeconfig' output includes 'data' block"
+../cfctl kubeconfig --config cfctl.yaml | grep -v -- "-data"
 
 echo "* Run kubectl on controller"
 footloose ssh root@manager0 -- k0s kubectl get nodes
@@ -27,8 +26,8 @@ footloose ssh root@manager0 -- k0s kubectl get nodes
 echo "* Downloading kubectl for local test"
 downloadKubectl
 
-echo "* Using k0sctl kubecofig locally"
-../k0sctl kubeconfig --config k0sctl.yaml > kubeconfig
+echo "* Using cfctl kubecofig locally"
+../cfctl kubeconfig --config cfctl.yaml >kubeconfig
 
 echo "* Output:"
 cat kubeconfig | grep -v -- "-data"
@@ -36,4 +35,3 @@ cat kubeconfig | grep -v -- "-data"
 echo "* Running kubectl"
 ./kubectl --kubeconfig kubeconfig get nodes
 echo "* Done"
-

@@ -1,6 +1,6 @@
 variable "cluster_name" {
   type    = string
-  default = "k0sctl"
+  default = "cfctl"
 }
 
 variable "controller_count" {

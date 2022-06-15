@@ -6,21 +6,21 @@ provider "aws" {
   region = "eu-north-1"
 }
 
-resource "tls_private_key" "k0sctl" {
+resource "tls_private_key" "cfctl" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
 resource "aws_key_pair" "cluster-key" {
   key_name   = format("%s_key", var.cluster_name)
-  public_key = tls_private_key.k0sctl.public_key_openssh
+  public_key = tls_private_key.cfctl.public_key_openssh
 }
 
 // Save the private key to filesystem
 resource "local_file" "aws_private_pem" {
   file_permission = "600"
   filename        = format("%s/%s", path.module, "aws_private.pem")
-  content         = tls_private_key.k0sctl.private_key_pem
+  content         = tls_private_key.cfctl.private_key_pem
 }
 
 resource "aws_security_group" "cluster_allow_ssh" {
@@ -69,7 +69,7 @@ data "aws_ami" "ubuntu" {
 
 locals {
   k0s_tmpl = {
-    apiVersion = "k0sctl.k0sproject.io/v1beta1"
+    apiVersion = "cfctl.clusterfactory.io/v1beta1"
     kind       = "cluster"
     spec = {
       hosts = [

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/phase"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/phase"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli/v2"
@@ -14,7 +14,7 @@ import (
 
 var applyCommand = &cli.Command{
 	Name:  "apply",
-	Usage: "Apply a k0sctl configuration",
+	Usage: "Apply a cfctl configuration",
 	Flags: []cli.Flag{
 		configFlag,
 		&cli.BoolFlag{
@@ -105,7 +105,7 @@ var applyCommand = &cli.Command{
 
 		log.Infof("k0s cluster version %s is now installed", manager.Config.Spec.K0s.Version)
 		log.Infof("Tip: To access the cluster you can now fetch the admin kubeconfig using:")
-		log.Infof("     " + Colorize.Cyan("k0sctl kubeconfig").String())
+		log.Infof("     " + Colorize.Cyan("cfctl kubeconfig").String())
 
 		return nil
 	},

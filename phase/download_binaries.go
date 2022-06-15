@@ -8,9 +8,9 @@ import (
 	"path"
 	"strings"
 
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/adrg/xdg"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -90,7 +90,7 @@ type binary struct {
 }
 
 func (b *binary) download() error {
-	fn := path.Join("k0sctl", "k0s", b.os, b.arch, "k0s-"+b.version+b.ext())
+	fn := path.Join("cfctl", "k0s", b.os, b.arch, "k0s-"+b.version+b.ext())
 	p, err := xdg.SearchCacheFile(fn)
 	if err == nil {
 		b.path = p

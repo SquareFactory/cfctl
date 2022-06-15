@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/integration/github"
-	"github.com/k0sproject/k0sctl/version"
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/integration/github"
+	"github.com/SquareFactory/cfctl/version"
 	"github.com/urfave/cli/v2"
 )
 
 var versionCommand = &cli.Command{
 	Name:  "version",
-	Usage: "Output k0sctl version",
+	Usage: "Output cfctl version",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:   "machine-id",

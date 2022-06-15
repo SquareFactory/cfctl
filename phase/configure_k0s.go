@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/dig"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/exec"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -89,7 +89,7 @@ func (p *ConfigureK0s) configureK0s(h *cluster.Host) error {
 		}
 		oldcfg = c
 
-		if !h.Configurer.FileContains(h, path, " generated-by-k0sctl") {
+		if !h.Configurer.FileContains(h, path, " generated-by-cfctl") {
 			newpath := path + ".old"
 			log.Warnf("%s: an existing config was found and will be backed up as %s", h, newpath)
 			if err := h.Configurer.MoveFile(h, path, newpath); err != nil {
@@ -219,5 +219,5 @@ func (p *ConfigureK0s) configFor(h *cluster.Host) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("# generated-by-k0sctl %s\n%s", time.Now().Format(time.RFC3339), c), nil
+	return fmt.Sprintf("# generated-by-cfctl %s\n%s", time.Now().Format(time.RFC3339), c), nil
 }

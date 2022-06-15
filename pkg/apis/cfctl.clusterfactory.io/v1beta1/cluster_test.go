@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"testing"
 
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +13,7 @@ func TestAPIVersionValidation(t *testing.T) {
 		Kind:       "cluster",
 	}
 
-	require.EqualError(t, cfg.Validate(), "apiVersion: must equal k0sctl.k0sproject.io/v1beta1.")
+	require.EqualError(t, cfg.Validate(), "apiVersion: must equal cfctl.clusterfactory.io/v1beta1.")
 	cfg.APIVersion = APIVersion
 	require.NoError(t, cfg.Validate())
 }

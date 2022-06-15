@@ -11,14 +11,14 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/integration/github"
+	"github.com/SquareFactory/cfctl/integration/segment"
+	"github.com/SquareFactory/cfctl/phase"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	cfctl "github.com/SquareFactory/cfctl/version"
 	"github.com/a8m/envsubst"
 	"github.com/adrg/xdg"
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/integration/github"
-	"github.com/k0sproject/k0sctl/integration/segment"
-	"github.com/k0sproject/k0sctl/phase"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
-	k0sctl "github.com/k0sproject/k0sctl/version"
 	"github.com/k0sproject/rig"
 	"github.com/k0sproject/rig/exec"
 	"github.com/logrusorgru/aurora"
@@ -55,7 +55,7 @@ var (
 		Name:      "config",
 		Usage:     "Path to cluster config yaml. Use '-' to read from stdin.",
 		Aliases:   []string{"c"},
-		Value:     "k0sctl.yaml",
+		Value:     "cfctl.yaml",
 		TakesFile: true,
 	}
 
@@ -67,7 +67,7 @@ var (
 
 	upgradeCheckFlag = &cli.BoolFlag{
 		Name:    "disable-upgrade-check",
-		Usage:   "Do not check for a k0sctl upgrade",
+		Usage:   "Do not check for a cfctl upgrade",
 		EnvVars: []string{"DISABLE_UPGRADE_CHECK"},
 	}
 
@@ -131,11 +131,11 @@ func initConfig(ctx *cli.Context) error {
 }
 
 func displayCopyright(ctx *cli.Context) error {
-	fmt.Printf("k0sctl %s Copyright 2021, k0sctl authors.\n", k0sctl.Version)
+	fmt.Printf("cfctl %s Copyright 2021, cfctl authors.\n", cfctl.Version)
 	if !ctx.Bool("disable-telemetry") {
 		fmt.Println("Anonymized telemetry of usage will be sent to the authors.")
 	}
-	fmt.Println("By continuing to use k0sctl you agree to these terms:")
+	fmt.Println("By continuing to use cfctl you agree to these terms:")
 	fmt.Println("https://k0sproject.io/licenses/eula")
 	return nil
 }
@@ -144,14 +144,14 @@ func warnOldCache(_ *cli.Context) error {
 	var olds []string
 	home, err := os.UserHomeDir()
 	if err == nil {
-		olds = append(olds, path.Join(home, ".k0sctl", "cache"))
+		olds = append(olds, path.Join(home, ".cfctl", "cache"))
 	}
 	if runtime.GOOS == "linux" {
-		olds = append(olds, "/var/cache/k0sctl")
+		olds = append(olds, "/var/cache/cfctl")
 	}
 	for _, p := range olds {
 		if _, err := os.Stat(p); err == nil {
-			log.Warnf("An old cache directory still exists at %s, k0sctl now uses %s", p, path.Join(xdg.CacheHome, "k0sctl"))
+			log.Warnf("An old cache directory still exists at %s, cfctl now uses %s", p, path.Join(xdg.CacheHome, "cfctl"))
 		}
 	}
 	return nil
@@ -226,7 +226,7 @@ func initFileLogger() error {
 	return nil
 }
 
-const logPath = "k0sctl/k0sctl.log"
+const logPath = "cfctl/cfctl.log"
 
 func LogFile() (io.Writer, error) {
 	fn, err := xdg.SearchCacheFile(logPath)
@@ -261,8 +261,8 @@ func configReader(f string) (io.ReadCloser, error) {
 
 	variants := []string{f}
 	// add .yml to default value lookup
-	if f == "k0sctl.yaml" {
-		variants = append(variants, "k0sctl.yml")
+	if f == "cfctl.yaml" {
+		variants = append(variants, "cfctl.yml")
 	}
 
 	for _, fn := range variants {
@@ -366,7 +366,7 @@ func displayLogo(_ *cli.Context) error {
 var upgradeChan = make(chan *github.Release)
 
 func githubOrCachedRelease() (*github.Release, error) {
-	cached, err := xdg.SearchCacheFile("k0sctl.github.latest.json")
+	cached, err := xdg.SearchCacheFile("cfctl.github.latest.json")
 	if err == nil {
 		log.Tracef("found a cached github response in %s", cached)
 		stat, err := os.Stat(cached)
@@ -381,12 +381,12 @@ func githubOrCachedRelease() (*github.Release, error) {
 			}
 		}
 	}
-	log.Tracef("starting online k0sctl upgrade check")
-	latest, err := github.LatestRelease(k0sctl.IsPre())
+	log.Tracef("starting online cfctl upgrade check")
+	latest, err := github.LatestRelease(cfctl.IsPre())
 	if err != nil {
 		return nil, err
 	}
-	cached, err = xdg.CacheFile("k0sctl.github.latest.json")
+	cached, err = xdg.CacheFile("cfctl.github.latest.json")
 	if err != nil {
 		return nil, err
 	}
@@ -404,12 +404,12 @@ func githubOrCachedRelease() (*github.Release, error) {
 }
 
 func startCheckUpgrade(ctx *cli.Context) error {
-	if ctx.Bool("disable-upgrade-check") || k0sctl.Environment == "development" {
+	if ctx.Bool("disable-upgrade-check") || cfctl.Environment == "development" {
 		return nil
 	}
 
 	go func() {
-		log.Tracef("starting k0sctl upgrade check")
+		log.Tracef("starting cfctl upgrade check")
 		latest, err := githubOrCachedRelease()
 		log.Tracef("upgrade check response received")
 		if err != nil {
@@ -417,7 +417,7 @@ func startCheckUpgrade(ctx *cli.Context) error {
 			upgradeChan <- nil
 			return
 		}
-		if latest.IsNewer(k0sctl.Version) {
+		if latest.IsNewer(cfctl.Version) {
 			upgradeChan <- latest
 		} else {
 			upgradeChan <- nil
@@ -428,7 +428,7 @@ func startCheckUpgrade(ctx *cli.Context) error {
 }
 
 func reportCheckUpgrade(ctx *cli.Context) error {
-	if ctx.Bool("disable-upgrade-check") || k0sctl.Environment == "development" {
+	if ctx.Bool("disable-upgrade-check") || cfctl.Environment == "development" {
 		return nil
 	}
 
@@ -440,7 +440,7 @@ func reportCheckUpgrade(ctx *cli.Context) error {
 		if release == nil {
 			log.Tracef("no upgrade available")
 		} else {
-			fmt.Println(Colorize.BrightCyan(fmt.Sprintf("A new version %s of k0sctl is available: %s", release.TagName, release.URL)))
+			fmt.Println(Colorize.BrightCyan(fmt.Sprintf("A new version %s of cfctl is available: %s", release.TagName, release.URL)))
 		}
 	case <-time.After(5 * time.Second):
 		log.Tracef("upgrade check timed out")

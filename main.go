@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/cmd"
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/cmd"
 	log "github.com/sirupsen/logrus"
 )
 

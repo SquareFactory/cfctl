@@ -1,14 +1,14 @@
 package phase
 
 import (
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 
 	// anonymous import is needed to load the os configurers
-	_ "github.com/k0sproject/k0sctl/configurer"
+	_ "github.com/SquareFactory/cfctl/configurer"
 	// anonymous import is needed to load the os configurers
-	_ "github.com/k0sproject/k0sctl/configurer/linux"
+	_ "github.com/SquareFactory/cfctl/configurer/linux"
 	// anonymous import is needed to load the os configurers
-	_ "github.com/k0sproject/k0sctl/configurer/linux/enterpriselinux"
+	_ "github.com/SquareFactory/cfctl/configurer/linux/enterpriselinux"
 
 	log "github.com/sirupsen/logrus"
 )

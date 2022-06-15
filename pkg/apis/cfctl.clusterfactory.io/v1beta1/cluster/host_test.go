@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	cfg "github.com/k0sproject/k0sctl/configurer"
-	"github.com/k0sproject/k0sctl/configurer/linux"
+	cfg "github.com/SquareFactory/cfctl/configurer"
+	"github.com/SquareFactory/cfctl/configurer/linux"
 	"github.com/k0sproject/rig/exec"
 	"github.com/k0sproject/rig/os"
 	"github.com/stretchr/testify/require"

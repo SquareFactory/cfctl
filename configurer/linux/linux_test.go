@@ -3,7 +3,7 @@ package linux
 import (
 	"testing"
 
-	"github.com/k0sproject/k0sctl/configurer"
+	"github.com/SquareFactory/cfctl/configurer"
 	"github.com/stretchr/testify/require"
 )
 

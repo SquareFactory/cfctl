@@ -3,8 +3,8 @@ package phase
 import (
 	"time"
 
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1"
-	"github.com/k0sproject/k0sctl/pkg/apis/k0sctl.k0sproject.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/exec"
 	log "github.com/sirupsen/logrus"
 )
@@ -78,7 +78,7 @@ func (p *InstallControllers) Run() error {
 		}
 
 		defer func() {
-			if err := h.Configurer.WriteFile(h, h.K0sJoinTokenPath(), "# overwritten by k0sctl after join\n", "0600"); err != nil {
+			if err := h.Configurer.WriteFile(h, h.K0sJoinTokenPath(), "# overwritten by cfctl after join\n", "0600"); err != nil {
 				log.Warnf("%s: failed to overwrite the join token file at %s", h, h.K0sJoinTokenPath())
 			}
 		}()

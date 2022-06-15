@@ -3,8 +3,8 @@ package segment
 import (
 	"runtime"
 
-	"github.com/k0sproject/k0sctl/analytics"
-	"github.com/k0sproject/k0sctl/version"
+	"github.com/SquareFactory/cfctl/analytics"
+	"github.com/SquareFactory/cfctl/version"
 	segment "github.com/segmentio/analytics-go"
 	log "github.com/sirupsen/logrus"
 )
@@ -17,7 +17,7 @@ var Verbose bool
 
 var ctx = &segment.Context{
 	App: segment.AppInfo{
-		Name:      "k0sctl",
+		Name:      "cfctl",
 		Version:   version.Version,
 		Build:     version.GitCommit,
 		Namespace: "k0s",
