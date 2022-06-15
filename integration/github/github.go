@@ -79,7 +79,7 @@ func LatestRelease(preok bool) (Release, error) {
 	latest := versions[len(versions)-1].String()
 
 	for _, v := range releases {
-		if strings.TrimPrefix(v.TagName, "v") == latest {
+		if v.TagName == latest {
 			return v, nil
 		}
 	}
