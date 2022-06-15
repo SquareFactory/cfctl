@@ -61,7 +61,7 @@ func LatestK0sVersion(preok bool) (string, error) {
 // LatestRelease returns the semantically sorted latest cfctl version from github
 func LatestRelease(preok bool) (Release, error) {
 	var releases []Release
-	if err := unmarshalURLBody("https://api.github.com/repos/k0sproject/cfctl/releases?per_page=20&page=1", &releases); err != nil {
+	if err := unmarshalURLBody("https://api.github.com/repos/SquareFactory/cfctl/releases?per_page=20&page=1", &releases); err != nil {
 		return Release{}, err
 	}
 
