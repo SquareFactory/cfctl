@@ -52,22 +52,6 @@ If you have a working Go toolchain, you can use `go install` to install cfctl to
 go install github.com/SquareFactory/cfctl@latest
 ```
 
-### Package managers
-
-#### [Homebrew](https://brew.sh/) (macOS, Linux)
-
-```sh
-brew install k0sproject/tap/cfctl
-```
-
-#### [Chocolatey](https://chocolatey.org/) (Windows)
-
-Note: The [chocolatey package](https://community.chocolatey.org/packages/cfctl) is community maintained, any issues should be reported to the maintainer of the package.
-
-```sh
-choco install cfctl
-```
-
 #### Shell auto-completions
 
 ##### Bash
