@@ -28,6 +28,7 @@ var App = &cli.App{
 				configStatusCommand,
 			},
 		},
+		kubesealCommand,
 		completionCommand,
 	},
 	EnableBashCompletion: true,
