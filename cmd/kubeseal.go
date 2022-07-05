@@ -39,6 +39,9 @@ var kubesealCommand = &cli.Command{
 				}
 				if res := secretFileRegex.FindStringSubmatch(path); len(res) == 3 {
 					sealedFilePath := fmt.Sprintf("%s-sealed-secret.%s", res[1], res[2])
+					if _, err := os.Stat(sealedFilePath); err == nil {
+						return nil
+					}
 					fmt.Printf("Processing %s\n", path)
 					_, err := exec.Command(
 						"kubeseal",
