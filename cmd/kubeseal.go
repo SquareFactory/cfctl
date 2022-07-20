@@ -43,7 +43,7 @@ var kubesealCommand = &cli.Command{
 						return nil
 					}
 					fmt.Printf("Processing %s\n", path)
-					_, err := exec.Command(
+					out, err := exec.Command(
 						"kubeseal",
 						"--controller-namespace",
 						ctx.String("controller-namespace"),
@@ -55,9 +55,9 @@ var kubesealCommand = &cli.Command{
 						path,
 						"--sealed-secret-file",
 						sealedFilePath,
-					).Output()
+					).CombinedOutput()
 					if err != nil {
-						fmt.Printf("%v\n", err)
+						fmt.Printf("%v: %s\n", err, out)
 					}
 				}
 				return nil
