@@ -442,6 +442,8 @@ $ ssh -A user@jumphost
 user@jumphost ~ $ cfctl apply
 ```
 
+Pageant or openssh-agent can be used on Windows.
+
 ###### `spec.hosts[*].ssh.address` &lt;string&gt; (required)
 
 IP address of the host
