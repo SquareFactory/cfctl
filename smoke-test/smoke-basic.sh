@@ -11,7 +11,7 @@ deleteCluster
 createCluster
 
 echo "* Starting apply"
-../cfctl apply --config "${CFCTL_CONFIG}" --debug
+../cfctl apply --config "${CFCTL_CONFIG}" --kubeconfig-out applykubeconfig --debug
 echo "* Apply OK"
 
 echo "* Verify hooks were executed on the host"
@@ -25,6 +25,9 @@ footloose ssh root@manager0 -- k0s kubectl get nodes
 
 echo "* Downloading kubectl for local test"
 downloadKubectl
+
+echo "* Using the kubectl from apply"
+./kubectl --kubeconfig applykubeconfig get nodes
 
 echo "* Using cfctl kubecofig locally"
 ../cfctl kubeconfig --config cfctl.yaml >kubeconfig

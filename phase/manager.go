@@ -2,6 +2,7 @@ package phase
 
 import (
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/logrusorgru/aurora"
 	log "github.com/sirupsen/logrus"
 )
@@ -92,6 +93,9 @@ func (m *Manager) Run() error {
 		}
 
 		if p, ok := p.(propsetter); ok {
+			if m.Config.Spec.K0s == nil {
+				m.Config.Spec.K0s = &cluster.K0s{Metadata: cluster.K0sMetadata{}}
+			}
 			if m.Config.Spec.K0s.Metadata.ClusterID != "" {
 				p.SetProp("clusterID", m.Config.Spec.K0s.Metadata.ClusterID)
 			}
