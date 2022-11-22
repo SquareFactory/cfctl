@@ -31,9 +31,9 @@ func (p *UpgradeWorkers) Prepare(config *v1beta1.Cluster) error {
 	p.Config = config
 	p.leader = p.Config.Spec.K0sLeader()
 	var workers cluster.Hosts = p.Config.Spec.Hosts.Workers()
-	log.Debugf("%d controllers in total", len(workers))
+	log.Debugf("%d workers in total", len(workers))
 	p.hosts = workers.Filter(func(h *cluster.Host) bool {
-		return h.Metadata.NeedsUpgrade
+		return !h.Reset && h.Metadata.NeedsUpgrade
 	})
 	log.Debugf("UpgradeWorkers phase prepared, %d workers needs upgrade", len(p.hosts))
 
@@ -130,7 +130,7 @@ func (p *UpgradeWorkers) upgradeWorker(h *cluster.Host) error {
 		log.Debugf("%s: not waiting because --no-wait given", h)
 	} else {
 		log.Infof("%s: waiting for node to become ready again", h)
-		if err := p.Config.Spec.K0sLeader().WaitKubeNodeReady(h); err != nil {
+		if err := h.WaitKubeNodeReady(); err != nil {
 			return err
 		}
 		h.Metadata.Ready = true

@@ -27,6 +27,7 @@ type Host struct {
 	rig.Connection `yaml:",inline"`
 
 	Role             string            `yaml:"role"`
+	Reset            bool              `yaml:"reset,omitempty"`
 	PrivateInterface string            `yaml:"privateInterface,omitempty"`
 	PrivateAddress   string            `yaml:"privateAddress,omitempty"`
 	Environment      map[string]string `yaml:"environment,flow,omitempty"`
@@ -110,8 +111,8 @@ type configurer interface {
 	DeleteFile(os.Host, string) error
 	CommandExist(os.Host, string) bool
 	Hostname(os.Host) string
-	KubectlCmdf(string, ...interface{}) string
-	KubeconfigPath() string
+	KubectlCmdf(os.Host, string, ...interface{}) string
+	KubeconfigPath(os.Host) string
 	IsContainer(os.Host) bool
 	FixContainer(os.Host) error
 	HTTPStatus(os.Host, string) (int, error)
@@ -148,6 +149,10 @@ func (h *Host) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	if err := unmarshal(yh); err != nil {
 		return err
+	}
+
+	if h.SSH.HostKey != "" {
+		log.Warnf("%s: host.ssh.hostKey is deprecated, use a ssh known hosts file instead", h)
 	}
 
 	return defaults.Set(h)
@@ -349,8 +354,8 @@ type kubeNodeStatus struct {
 }
 
 // KubeNodeReady runs kubectl on the host and returns true if the given node is marked as ready
-func (h *Host) KubeNodeReady(node *Host) (bool, error) {
-	output, err := h.ExecOutput(h.Configurer.KubectlCmdf("get node -l kubernetes.io/hostname=%s -o json", node.Metadata.Hostname), exec.HideOutput(), exec.Sudo(h))
+func (h *Host) KubeNodeReady() (bool, error) {
+	output, err := h.ExecOutput(h.Configurer.KubectlCmdf(h, "get node -l kubernetes.io/hostname=%s -o json", h.Metadata.Hostname), exec.HideOutput(), exec.Sudo(h))
 	if err != nil {
 		return false, err
 	}
@@ -361,27 +366,27 @@ func (h *Host) KubeNodeReady(node *Host) (bool, error) {
 	}
 	for _, i := range status.Items {
 		for _, c := range i.Status.Conditions {
-			log.Debugf("%s: node status condition %s = %s", node, c.Type, c.Status)
+			log.Debugf("%s: node status condition %s = %s", h, c.Type, c.Status)
 			if c.Type == "Ready" {
 				return c.Status == "True", nil
 			}
 		}
 	}
 
-	log.Debugf("%s: failed to find Ready=True state in kubectl output", node)
+	log.Debugf("%s: failed to find Ready=True state in kubectl output", h)
 	return false, nil
 }
 
 // WaitKubeNodeReady blocks until node becomes ready. TODO should probably use Context
-func (h *Host) WaitKubeNodeReady(node *Host) error {
+func (h *Host) WaitKubeNodeReady() error {
 	return retry.Do(
 		func() error {
-			status, err := h.KubeNodeReady(node)
+			status, err := h.KubeNodeReady()
 			if err != nil {
 				return err
 			}
 			if !status {
-				return fmt.Errorf("%s: node %s status not reported as ready", h, node.Metadata.Hostname)
+				return fmt.Errorf("%s: node %s status not reported as ready", h, h.Metadata.Hostname)
 			}
 			return nil
 		},
@@ -395,12 +400,25 @@ func (h *Host) WaitKubeNodeReady(node *Host) error {
 
 // DrainNode drains the given node
 func (h *Host) DrainNode(node *Host) error {
-	return h.Exec(h.Configurer.KubectlCmdf("drain --grace-period=120 --force --timeout=5m --ignore-daemonsets --delete-local-data %s", node.Metadata.Hostname), exec.Sudo(h))
+	return h.Exec(h.Configurer.KubectlCmdf(h, "drain --grace-period=120 --force --timeout=5m --ignore-daemonsets --delete-local-data %s", node.Metadata.Hostname), exec.Sudo(h))
 }
 
 // UncordonNode marks the node schedulable again
 func (h *Host) UncordonNode(node *Host) error {
-	return h.Exec(h.Configurer.KubectlCmdf("uncordon %s", node.Metadata.Hostname), exec.Sudo(h))
+	return h.Exec(h.Configurer.KubectlCmdf(h, "uncordon %s", node.Metadata.Hostname), exec.Sudo(h))
+}
+
+// DeleteNode deletes the given node from kubernetes
+func (h *Host) DeleteNode(node *Host) error {
+	return h.Exec(h.Configurer.KubectlCmdf(h, "delete node %s", node.Metadata.Hostname), exec.Sudo(h))
+}
+
+func (h *Host) LeaveEtcd(node *Host) error {
+	etcdAddress := node.SSH.Address
+	if node.PrivateAddress != "" {
+		etcdAddress = node.PrivateAddress
+	}
+	return h.Exec(h.Configurer.K0sCmdf("etcd leave --peer-address %s", etcdAddress), exec.Sudo(h))
 }
 
 // CheckHTTPStatus will perform a web request to the url and return an error if the http status is not the expected

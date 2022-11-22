@@ -97,7 +97,6 @@ cfctl is ready for use and in continuous development. It is still at a stage whe
 Missing major features include at least:
 
 - The released binaries have not been signed
-- Nodes can't be removed
 - The configuration specification and command-line interface options are still evolving
 
 ## Usage
@@ -456,9 +455,9 @@ Username to log in as.
 
 TCP port of the SSH service on the host.
 
-###### `spec.hosts[*].ssh.keyPath` &lt;string&gt; (optional) (default: `~/.ssh/id_rsa`)
+###### `spec.hosts[*].ssh.keyPath` &lt;string&gt; (optional) (default: `~/.ssh/identity ~/.ssh/id_rsa ~/.ssh/id_dsa`)
 
-Path to an SSH private key file.
+Path to an SSH key file. If a public key is used, ssh-agent is required. When left empty, the default value will first be looked for from the ssh configuration (default `~/.ssh/config`) `IdentityFile` parameter.
 
 ##### `spec.hosts[*].localhost` &lt;mapping&gt; (optional)
 
@@ -467,6 +466,10 @@ Localhost connection options. Can be used to use the local host running cfctl as
 ###### `spec.hosts[*].localhost.enabled` &lt;boolean&gt; (optional) (default: `false`)
 
 This must be set `true` to enable the localhost connection.
+
+###### `spec.hosts[*].reset` &lt;boolean&gt; (optional) (default: `false`)
+
+If set to `true` k0sctl will remove the node from kubernetes and reset k0s on the host.
 
 ### K0s Fields
 

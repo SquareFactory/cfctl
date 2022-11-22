@@ -27,7 +27,7 @@ func (p *InstallWorkers) Prepare(config *v1beta1.Cluster) error {
 	p.Config = config
 	var workers cluster.Hosts = p.Config.Spec.Hosts.Workers()
 	p.hosts = workers.Filter(func(h *cluster.Host) bool {
-		return h.Metadata.K0sRunningVersion == "" || !h.Metadata.Ready
+		return !h.Reset && (h.Metadata.K0sRunningVersion == "" || !h.Metadata.Ready)
 	})
 	p.leader = p.Config.Spec.K0sLeader()
 
@@ -141,7 +141,7 @@ func (p *InstallWorkers) Run() error {
 			log.Debugf("%s: not waiting because --no-wait given", h)
 		} else {
 			log.Infof("%s: waiting for node to become ready", h)
-			if err := p.Config.Spec.K0sLeader().WaitKubeNodeReady(h); err != nil {
+			if err := h.WaitKubeNodeReady(); err != nil {
 				return err
 			}
 			h.Metadata.Ready = true
