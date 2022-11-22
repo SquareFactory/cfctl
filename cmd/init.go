@@ -30,19 +30,19 @@ spec:
   network:
     podCIDR: 10.244.0.0/16
     serviceCIDR: 10.96.0.0/12
-    provider: kuberouter
-    kuberouter:
-      mtu: 0
-      peerRouterIPs: ""
-      peerRouterASNs: ""
-      autoMTU: true
+    provider: calico
+    calico:
+      mode: 'vxlan'
+      overlay: Always
+      mtu: 1450
+      wireguard: false
     kubeProxy:
       disabled: false
       mode: iptables
   podSecurityPolicy:
     defaultPolicy: 00-k0s-privileged
   telemetry:
-    enabled: true
+    enabled: false
   installConfig:
     users:
       etcdUser: etcd
@@ -53,6 +53,141 @@ spec:
   konnectivity:
     agentPort: 8132
     adminPort: 8133
+
+  extensions:
+  helm:
+    repositories:
+      - name: traefik
+        url: https://helm.traefik.io/traefik
+      - name: bitnami
+        url: https://charts.bitnami.com/bitnami
+      - name: jetstack
+        url: https://charts.jetstack.io
+      - name: csi-driver-nfs
+        url: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
+      - name: cloudve
+        url: https://github.com/CloudVE/helm-charts/raw/master
+    charts:
+      - name: metallb
+        chartname: bitnami/metallb
+        version: '4.1.2'
+        namespace: metallb
+
+      - name: traefik
+        chartname: traefik/traefik
+        version: '10.24.2'
+        namespace: traefik
+        values: |
+          deployment:
+            kind: DaemonSet
+
+          ingressClass:
+            enabled: true
+            isDefaultClass: true
+
+          service:
+            enabled: true
+            annotations:
+              metallb.universe.tf/address-pool: main-pool
+              metallb.universe.tf/allow-shared-ip: traefik-lb-key
+            spec:
+              externalTrafficPolicy: Cluster
+              loadBalancerIP: 192.168.1.100
+
+          providers:
+            kubernetesCRD:
+              enabled: true
+              allowCrossNamespace: true
+              allowExternalNameServices: true
+              namespaces: []
+            kubernetesIngress:
+              enabled: true
+              allowExternalNameServices: true
+              namespaces: []
+              ingressClass: traefik
+              publishedService:
+                enabled: true
+
+          globalArguments:
+            - '--global.checknewversion'
+            - '--api.dashboard=true'
+
+          additionalArguments:
+            - '--entryPoints.websecure.proxyProtocol.insecure'
+            - '--entryPoints.websecure.forwardedHeaders.insecure'
+
+          ingressRoute:
+            dashboard:
+              enabled: false
+
+          ports:
+            traefik:
+              port: 9000
+              expose: false
+              exposedPort: 9000
+              protocol: TCP
+            dns-tcp:
+              port: 8053
+              expose: true
+              exposedPort: 53
+              protocol: TCP
+            dns-udp:
+              port: 8054
+              expose: true
+              exposedPort: 53
+              protocol: UDP
+            web:
+              port: 80
+              expose: true
+              exposedPort: 80
+              protocol: TCP
+            websecure:
+              port: 443
+              expose: true
+              exposedPort: 443
+              protocol: TCP
+              # You MUST open port 443 UDP!
+              # HTTP3 upgrades the connection from TCP to UDP.
+              http3: true
+              tls:
+                enabled: true
+            metrics:
+              port: 9100
+              expose: false
+              exposedPort: 9100
+              protocol: TCP
+
+          experimental:
+            http3:
+              enabled: true
+
+          securityContext:
+            capabilities:
+              drop: [ALL]
+              add: [NET_BIND_SERVICE]
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 0
+
+          podSecurityContext:
+            fsGroup: 65532
+
+      - name: cert-manager
+        chartname: jetstack/cert-manager
+        version: 'v1.9.1'
+        namespace: cert-manager
+        values: |
+          installCRDs: true
+
+      - name: csi-driver-nfs
+        chartname: csi-driver-nfs/csi-driver-nfs
+        version: 'v4.1.0'
+        namespace: csi-driver-nfs
+        values: |
+          driver:
+            mountPermissions: 0775
+          kubeletDir: /var/lib/k0s/kubelet
 `)
 
 var defaultHosts = cluster.Hosts{
@@ -60,9 +195,20 @@ var defaultHosts = cluster.Hosts{
 		Connection: rig.Connection{
 			SSH: &rig.SSH{
 				Address: "10.0.0.1",
+				User:    "root",
+				Port:    22,
+				KeyPath: "~/.ssh/id_ed25519",
 			},
 		},
-		Role: "controller",
+		Role:             "controller+worker",
+		NoTaints:         true,
+		PrivateInterface: "eno1",
+		PrivateAddress:   "10.0.0.1",
+		InstallFlags: cluster.Flags{
+			"--debug",
+			"--labels=\"topology.kubernetes.io/region=ch-sion,topology.kubernetes.io/zone=ch-sion-1\"",
+			"--disable-components coredns",
+		},
 	},
 	&cluster.Host{
 		Connection: rig.Connection{
@@ -70,7 +216,13 @@ var defaultHosts = cluster.Hosts{
 				Address: "10.0.0.2",
 			},
 		},
-		Role: "worker",
+		Role:             "worker",
+		PrivateInterface: "eno1",
+		PrivateAddress:   "10.0.0.2",
+		InstallFlags: cluster.Flags{
+			"--debug",
+			"--labels=\"topology.kubernetes.io/region=ch-sion,topology.kubernetes.io/zone=ch-sion-1\"",
+		},
 	},
 }
 

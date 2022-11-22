@@ -2,11 +2,12 @@ package linux
 
 import (
 	"errors"
-	"github.com/k0sproject/k0sctl/configurer"
+	"strings"
+
+	"github.com/SquareFactory/cfctl/configurer"
 	"github.com/k0sproject/rig"
 	"github.com/k0sproject/rig/os"
 	"github.com/k0sproject/rig/os/registry"
-	"strings"
 )
 
 // CoreOS provides OS support for ostree based Fedora & RHEL systems
