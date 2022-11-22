@@ -190,6 +190,7 @@ spec:
           kubeletDir: /var/lib/k0s/kubelet
 `)
 
+var defaultKeyPath = "~/.ssh/id_ed25519"
 var defaultHosts = cluster.Hosts{
 	&cluster.Host{
 		Connection: rig.Connection{
@@ -197,7 +198,7 @@ var defaultHosts = cluster.Hosts{
 				Address: "10.0.0.1",
 				User:    "root",
 				Port:    22,
-				KeyPath: "~/.ssh/id_ed25519",
+				KeyPath: &defaultKeyPath,
 			},
 		},
 		Role:             "controller+worker",
