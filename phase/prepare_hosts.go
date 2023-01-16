@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/alessio/shellescape"
 	"github.com/k0sproject/rig/os"
 	log "github.com/sirupsen/logrus"
 )
@@ -20,7 +21,7 @@ func (p *PrepareHosts) Title() string {
 
 // Run the phase
 func (p *PrepareHosts) Run() error {
-	return p.Config.Spec.Hosts.ParallelEach(p.prepareHost)
+	return p.parallelDo(p.Config.Spec.Hosts, p.prepareHost)
 }
 
 type prepare interface {
@@ -68,6 +69,12 @@ func (p *PrepareHosts) prepareHost(h *cluster.Host) error {
 			return err
 		}
 	}
+
+	if h.DataDir == "" {
+		log.Debugf("%s: data-dir is not set, using default", h)
+		h.DataDir = h.Configurer.DataDirDefaultPath()
+	}
+	h.DataDir = shellescape.Quote(h.DataDir)
 
 	return nil
 }

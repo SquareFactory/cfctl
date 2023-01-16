@@ -41,7 +41,7 @@ func (p *ConfigureK0s) Run() error {
 
 		var cmd string
 		if p.leader.Exec(p.leader.Configurer.K0sCmdf("config create --help"), exec.Sudo(p.leader)) == nil {
-			cmd = p.leader.Configurer.K0sCmdf("config create")
+			cmd = p.leader.Configurer.K0sCmdf("config create --data-dir=%s", p.leader.DataDir)
 		} else {
 			cmd = p.leader.Configurer.K0sCmdf("default-config")
 		}
@@ -59,7 +59,7 @@ func (p *ConfigureK0s) Run() error {
 	}
 
 	controllers := p.Config.Spec.Hosts.Controllers()
-	return controllers.ParallelEach(p.configureK0s)
+	return p.parallelDo(controllers, p.configureK0s)
 }
 
 func (p *ConfigureK0s) validateConfig(h *cluster.Host) error {

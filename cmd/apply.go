@@ -18,6 +18,8 @@ var applyCommand = &cli.Command{
 	Usage: "Apply a cfctl configuration",
 	Flags: []cli.Flag{
 		configFlag,
+		concurrencyFlag,
+		concurrentUploadsFlag,
 		&cli.BoolFlag{
 			Name:  "no-wait",
 			Usage: "Do not wait for worker nodes to join",
@@ -57,7 +59,7 @@ var applyCommand = &cli.Command{
 		start := time.Now()
 		phase.NoWait = ctx.Bool("no-wait")
 
-		manager := phase.Manager{Config: ctx.Context.Value(ctxConfigKey{}).(*v1beta1.Cluster)}
+		manager := phase.Manager{Config: ctx.Context.Value(ctxConfigKey{}).(*v1beta1.Cluster), Concurrency: ctx.Int("concurrency"), ConcurrentUploads: ctx.Int("concurrent-uploads")}
 		lockPhase := &phase.Lock{}
 
 		manager.AddPhase(
@@ -75,6 +77,7 @@ var applyCommand = &cli.Command{
 			&phase.DownloadK0s{},
 			&phase.DownloadCNI{},
 			&phase.SymlinkKubelet{},
+			&phase.InstallBinaries{},
 			&phase.RunHooks{Stage: "before", Action: "apply"},
 			&phase.PrepareArm{},
 			&phase.ConfigureK0s{},

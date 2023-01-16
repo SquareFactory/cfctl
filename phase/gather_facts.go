@@ -21,7 +21,7 @@ func (p *GatherFacts) Title() string {
 
 // Run the phase
 func (p *GatherFacts) Run() error {
-	return p.Config.Spec.Hosts.ParallelEach(p.investigateHost)
+	return p.parallelDo(p.Config.Spec.Hosts, p.investigateHost)
 }
 
 func (p *GatherFacts) investigateHost(h *cluster.Host) error {
@@ -32,6 +32,13 @@ func (p *GatherFacts) investigateHost(h *cluster.Host) error {
 		return err
 	}
 	h.Metadata.Arch = output
+
+	id, err := h.Configurer.MachineID(h)
+	if err != nil {
+		return err
+	}
+	h.Metadata.MachineID = id
+
 	p.IncProp(h.Metadata.Arch)
 
 	if extra := h.InstallFlags.GetValue("--kubelet-extra-args"); extra != "" {

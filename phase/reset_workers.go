@@ -59,7 +59,7 @@ func (p *ResetWorkers) CleanUp() {
 
 // Run the phase
 func (p *ResetWorkers) Run() error {
-	return p.hosts.ParallelEach(func(h *cluster.Host) error {
+	return p.parallelDo(p.hosts, func(h *cluster.Host) error {
 		log.Debugf("%s: draining node", h)
 		if !p.NoDrain {
 			if err := p.leader.DrainNode(&cluster.Host{
@@ -97,7 +97,7 @@ func (p *ResetWorkers) Run() error {
 		}
 
 		log.Debugf("%s: resetting k0s...", h)
-		out, err := h.ExecOutput(h.Configurer.K0sCmdf("reset"), exec.Sudo(h))
+		out, err := h.ExecOutput(h.Configurer.K0sCmdf("reset --data-dir=%s", h.DataDir), exec.Sudo(h))
 		c, _ := semver.NewConstraint("<= 1.22.3+k0s.0")
 		running, _ := semver.NewVersion(h.Metadata.K0sBinaryVersion)
 		if err != nil {

@@ -1,11 +1,12 @@
 package phase
 
 import (
-	"strings"
+	"errors"
 	"time"
 
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	retry "github.com/avast/retry-go"
+	"github.com/k0sproject/rig"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,7 +24,7 @@ var retries = uint(60)
 
 // Run the phase
 func (p *Connect) Run() error {
-	return p.Config.Spec.Hosts.ParallelEach(func(h *cluster.Host) error {
+	return p.parallelDo(p.Config.Spec.Hosts, func(h *cluster.Host) error {
 		err := retry.Do(
 			func() error {
 				return h.Connect()
@@ -35,7 +36,7 @@ func (p *Connect) Run() error {
 			),
 			retry.RetryIf(
 				func(err error) bool {
-					return !strings.Contains(err.Error(), "no supported methods remain")
+					return !errors.Is(err, rig.ErrCantConnect)
 				},
 			),
 			retry.DelayType(retry.CombineDelay(retry.FixedDelay, retry.RandomDelay)),

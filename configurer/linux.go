@@ -2,7 +2,6 @@ package configurer
 
 import (
 	"fmt"
-	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,6 +18,7 @@ type PathFuncs interface {
 	K0sConfigPath() string
 	K0sJoinTokenPath() string
 	KubeconfigPath(h os.Host) string
+	DataDirDefaultPath() string
 }
 
 // Linux is a base module for various linux OS support packages
@@ -112,23 +112,13 @@ func (l Linux) DownloadURL(h os.Host, url, destination string, opts ...exec.Opti
 }
 
 // DownloadK0s performs k0s binary download from github on the host
-func (l Linux) DownloadK0s(h os.Host, version *version.Version, arch string) error {
-	tmp, err := l.TempFile(h)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = h.Execf(`rm -f "%s"`, tmp) }()
-
+func (l Linux) DownloadK0s(h os.Host, path string, version *version.Version, arch string) error {
 	url := fmt.Sprintf("https://github.com/k0sproject/k0s/releases/download/%s/k0s-%s-%s", version, version, arch)
-	if err := l.DownloadURL(h, url, tmp); err != nil {
-		return err
+	if err := l.DownloadURL(h, url, path); err != nil {
+		return fmt.Errorf("download k0s: %w", err)
 	}
 
-	if err := h.Execf(`install -m 0755 -o root -g root -d "%s"`, path.Dir(l.PathFuncs.K0sBinaryPath()), exec.Sudo(h)); err != nil {
-		return err
-	}
-
-	return h.Execf(`install -m 0750 -o root -g root "%s" "%s"`, tmp, l.PathFuncs.K0sBinaryPath(), exec.Sudo(h))
+	return nil
 }
 
 // ReplaceK0sTokenPath replaces the config path in the service stub
@@ -153,6 +143,11 @@ func (l Linux) KubeconfigPath(h os.Host) string {
 		return "/var/lib/k0s/pki/admin.conf"
 	}
 	return "/var/lib/k0s/kubelet.conf"
+}
+
+// DataDirPath returns the location of k0s data dir
+func (l Linux) DataDirDefaultPath() string {
+	return "/var/lib/k0s"
 }
 
 // KubectlCmdf returns a command line in sprintf manner for running kubectl on the host using the kubeconfig from KubeconfigPath
@@ -249,4 +244,8 @@ func (l Linux) UpsertFile(h os.Host, path, content string) error {
 
 func (l Linux) DeleteDir(h os.Host, path string, opts ...exec.Option) error {
 	return h.Exec(fmt.Sprintf(`rmdir %s`, shellescape.Quote(path)), opts...)
+}
+
+func (l Linux) MachineID(h os.Host) (string, error) {
+	return h.ExecOutput(`cat /etc/machine-id || cat /var/lib/dbus/machine-id`)
 }

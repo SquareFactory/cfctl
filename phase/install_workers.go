@@ -55,7 +55,7 @@ func (p *InstallWorkers) Run() error {
 	url := p.Config.Spec.KubeAPIURL()
 	healthz := fmt.Sprintf("%s/healthz", url)
 
-	err := p.hosts.ParallelEach(func(h *cluster.Host) error {
+	err := p.parallelDo(p.hosts, func(h *cluster.Host) error {
 		log.Infof("%s: validating api connection to %s", h, url)
 		if err := h.WaitHTTPStatus(healthz, 200, 401); err != nil {
 			return fmt.Errorf("failed to connect from worker to kubernetes api at %s - check networking", url)
@@ -85,13 +85,13 @@ func (p *InstallWorkers) Run() error {
 
 	if !NoWait {
 		defer func() {
-			if err := p.leader.Exec(p.leader.Configurer.K0sCmdf("token invalidate %s", tokenID), exec.Sudo(p.leader), exec.RedactString(token)); err != nil {
+			if err := p.leader.Exec(p.leader.Configurer.K0sCmdf("token invalidate --data-dir=%s %s", p.leader.DataDir, tokenID), exec.Sudo(p.leader), exec.RedactString(token)); err != nil {
 				log.Warnf("%s: failed to invalidate the worker join token", p.leader)
 			}
 		}()
 	}
 
-	return p.hosts.ParallelEach(func(h *cluster.Host) error {
+	return p.parallelDo(p.hosts, func(h *cluster.Host) error {
 		log.Infof("%s: writing join token", h)
 		if err := h.Configurer.WriteFile(h, h.K0sJoinTokenPath(), token, "0640"); err != nil {
 			return err
@@ -121,7 +121,11 @@ func (p *InstallWorkers) Run() error {
 		}
 
 		log.Infof("%s: installing k0s worker", h)
-		if err := h.Exec(h.K0sInstallCommand()); err != nil {
+		cmd, err := h.K0sInstallCommand()
+		if err != nil {
+			return err
+		}
+		if err = h.Exec(cmd); err != nil {
 			return err
 		}
 
