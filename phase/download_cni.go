@@ -10,6 +10,7 @@ import (
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/alessio/shellescape"
+	"github.com/k0sproject/rig/exec"
 )
 
 var _ phase = &DownloadCNI{}
@@ -43,7 +44,7 @@ func (p *DownloadCNI) Run() error {
 			return err
 		}
 
-		if err := h.Exec(fmt.Sprintf(`curl -sSLf %s | tar -C /opt/cni/bin/ -xzf -`, shellescape.Quote(b.url()))); err != nil {
+		if err := h.Exec(fmt.Sprintf(`curl -sSLf %s | tar -C /opt/cni/bin/ -xzf -`, shellescape.Quote(b.url())), exec.Sudo(h)); err != nil {
 			return err
 		}
 	}
