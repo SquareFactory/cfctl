@@ -31,7 +31,7 @@ func (p *SymlinkKubelet) Run() error {
 		if err := ensureDir(h, "/var/lib/k0s/kubelet", "0755", "0"); err != nil {
 			return err
 		}
-		if err := h.Exec("if [ -L /var/lib/kubelet ]; then echo symlink already exists; else rm -rf /var/lib/kubelet && ln -s /var/lib/k0s/kubelet /var/lib/kubelet; fi", exec.Sudo(h)); err != nil {
+		if err := h.Exec("sh -c 'if [ -L /var/lib/kubelet ]; then echo symlink already exists; else rm -rf /var/lib/kubelet && ln -s /var/lib/k0s/kubelet /var/lib/kubelet; fi'", exec.Sudo(h)); err != nil {
 			return err
 		}
 	}
