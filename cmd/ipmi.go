@@ -22,9 +22,10 @@ type Credential struct {
 var credential = Credential{}
 var address string
 var ipmiCommand = &cli.Command{
-	Name:      "ipmi",
-	ArgsUsage: "host action",
-	Usage:     "Manage compute nodes using ipmi-api",
+	Name:        "ipmi",
+	ArgsUsage:   "host action",
+	Usage:       "Manage compute nodes using ipmi-api",
+	Description: "Send action to IPMI API. Available actions: on, off, cycle, status, soft, reset.",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:        "user",
@@ -79,10 +80,7 @@ var ipmiCommand = &cli.Command{
 			log.WithError(err).Warn("ipmi response body couldn't be read")
 		}
 
-		switch {
-		case resp.StatusCode == 404:
-			return fmt.Errorf("action '%s' not found", action)
-		case resp.StatusCode < 200 || resp.StatusCode >= 300:
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 			log.WithFields(log.Fields{
 				"status": resp.StatusCode,
 				"body":   string(b),
