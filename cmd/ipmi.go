@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
-	"os"
-	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli/v2"
 )
@@ -17,7 +19,8 @@ type Credential struct {
 	Password string `json:"password"`
 }
 
-var user, address string
+var credential = Credential{}
+var address string
 var ipmiCommand = &cli.Command{
 	Name:      "ipmi",
 	ArgsUsage: "host action",
@@ -25,9 +28,17 @@ var ipmiCommand = &cli.Command{
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:        "user",
-			Destination: &user,
-			Usage:       "IPMI user provided as 'username:password'",
+			Destination: &credential.Username,
+			Required:    true,
+			Usage:       "IPMI user provided",
 			EnvVars:     []string{"IPMIUSER"},
+		},
+		&cli.StringFlag{
+			Name:        "password",
+			Destination: &credential.Password,
+			Required:    true,
+			Usage:       "IPMI password",
+			EnvVars:     []string{"IPMIPASS"},
 		},
 		&cli.StringFlag{
 			Name:        "address",
@@ -38,7 +49,6 @@ var ipmiCommand = &cli.Command{
 		},
 	},
 	Action: func(ctx *cli.Context) error {
-
 		if ctx.NArg() != 2 {
 			return errors.New("not enough arguments, use --help")
 		}
@@ -46,27 +56,37 @@ var ipmiCommand = &cli.Command{
 		host := ctx.Args().Get(0)
 		action := ctx.Args().Get(1)
 
-		if _, ipmiServer := os.LookupEnv("IPMIADDRESS"); !ipmiServer {
-			return errors.New("ipmi server not defined, use --help")
-		}
-		requestPath := fmt.Sprintf("%s/host/%s/%s", os.Getenv("IPMIADDRESS"), host, action)
-
-		if _, ipmiUser := os.LookupEnv("IPMIUSER"); !ipmiUser {
-			return errors.New("ipmi user not defined, use --help")
-		}
-		userCreds := strings.Split(user, ":")
-		credential := Credential{
-			Username: userCreds[0],
-			Password: userCreds[1],
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			},
 		}
 
-		postData, _ := json.Marshal(credential)
+		requestPath := fmt.Sprintf("%s/host/%s/%s", address, host, action)
 
-		resp, err := http.Post(requestPath, "application/json", bytes.NewBuffer(postData))
+		postData, err := json.Marshal(credential)
 		if err != nil {
-			return errors.New("bad request")
+			return err
 		}
-		fmt.Printf("Status code : %d\n", resp.StatusCode)
+
+		resp, err := client.Post(requestPath, "application/json", bytes.NewBuffer(postData))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		b, _ := io.ReadAll(resp.Body)
+
+		switch {
+		case resp.StatusCode == 404:
+			return fmt.Errorf("action '%s' not found", action)
+		case resp.StatusCode < 200 || resp.StatusCode >= 300:
+			log.WithFields(log.Fields{
+				"status": resp.StatusCode,
+				"body":   b,
+			}).Error("ipmi API returned non-OK status code")
+			return errors.New("ipmi API returned non-OK status code")
+		}
+		log.Info("success")
 
 		return nil
 	},
