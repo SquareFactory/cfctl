@@ -30,6 +30,7 @@ var App = &cli.App{
 		},
 		kubesealCommand,
 		completionCommand,
+		ipmiCommand,
 	},
 	EnableBashCompletion: true,
 }
