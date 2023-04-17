@@ -74,7 +74,10 @@ var ipmiCommand = &cli.Command{
 			return err
 		}
 		defer resp.Body.Close()
-		b, _ := io.ReadAll(resp.Body)
+		b, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err).Warn("ipmi response body couldn't be read")
+		}
 
 		switch {
 		case resp.StatusCode == 404:
@@ -82,11 +85,11 @@ var ipmiCommand = &cli.Command{
 		case resp.StatusCode < 200 || resp.StatusCode >= 300:
 			log.WithFields(log.Fields{
 				"status": resp.StatusCode,
-				"body":   b,
+				"body":   string(b),
 			}).Error("ipmi API returned non-OK status code")
 			return errors.New("ipmi API returned non-OK status code")
 		}
-		log.Info("success")
+		log.Info(string(b))
 
 		return nil
 	},
