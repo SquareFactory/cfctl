@@ -1,128 +1,72 @@
 package cmd
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
-	"os/exec"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 )
 
+type Credential struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+var user, address string
 var ipmiCommand = &cli.Command{
-	Name:  "ipmi",
-	Usage: "Manage compute nodes using ipmi-api",
+	Name:      "ipmi",
+	ArgsUsage: "host action",
+	Usage:     "Manage compute nodes using ipmi-api",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:     "action",
-			Usage:    "IPMI action to perform (power-on, power-off, cycle, soft, reset, status)",
-			Required: true,
+			Name:        "user",
+			Destination: &user,
+			Usage:       "IPMI user provided as 'username:password'",
+			EnvVars:     []string{"IPMIUSER"},
 		},
 		&cli.StringFlag{
-			Name:     "host",
-			Usage:    "Hostname",
-			Required: true,
-		},
-		&cli.StringFlag{
-			Name:     "user",
-			Usage:    "IPMI user provided as 'username:password'",
-			Required: true,
+			Name:        "address",
+			Destination: &address,
+			Usage:       "API address",
+			Value:       "https://ipmi.internal",
+			EnvVars:     []string{"IPMIADDRESS"},
 		},
 	},
 	Action: func(ctx *cli.Context) error {
-		host := ctx.String("host")
-		action := ctx.String("action")
-		user := ctx.String("user")
 
-		switch action {
-		case "power-on":
-			requestPath := fmt.Sprintf("10.10.2.162:8080/host/%s/on", host)
-			out, err := exec.Command(
-				"curl",
-				"--request",
-				"POST",
-				requestPath,
-				"--user",
-				user,
-			).CombinedOutput()
-			if err != nil {
-				fmt.Printf("%v: %s\n", err, out)
-			}
-
-		case "power-off":
-			requestPath := fmt.Sprintf("10.10.2.162:8080/host/%s/off", host)
-			out, err := exec.Command(
-				"curl",
-				"--request",
-				"POST",
-				requestPath,
-				"--user",
-				user,
-			).CombinedOutput()
-
-			if err != nil {
-				fmt.Printf("%v: %s\n", err, out)
-			}
-
-		case "cycle":
-			requestPath := fmt.Sprintf("10.10.2.162:8080/host/%s/cycle", host)
-			out, err := exec.Command(
-				"curl",
-				"--request",
-				"POST",
-				requestPath,
-				"--user",
-				user,
-			).CombinedOutput()
-
-			if err != nil {
-				fmt.Printf("%v: %s\n", err, out)
-			}
-
-		case "soft":
-			requestPath := fmt.Sprintf("10.10.2.162:8080/host/%s/soft", host)
-			out, err := exec.Command(
-				"curl",
-				"--request",
-				"POST",
-				requestPath,
-				"--user",
-				user,
-			).CombinedOutput()
-
-			if err != nil {
-				fmt.Printf("%v: %s\n", err, out)
-			}
-
-		case "reset":
-			requestPath := fmt.Sprintf("10.10.2.162:8080/host/%s/reset", host)
-			out, err := exec.Command(
-				"curl",
-				"--request",
-				"POST",
-				requestPath,
-				"--user",
-				user,
-			).CombinedOutput()
-
-			if err != nil {
-				fmt.Printf("%v: %s\n", err, out)
-			}
-
-		case "status":
-			requestPath := fmt.Sprintf("10.10.2.162:8080/host/%s/status", host)
-			out, err := exec.Command(
-				"curl",
-				requestPath,
-				"--user",
-				user,
-			).CombinedOutput()
-
-			if err != nil {
-				fmt.Printf("%v: %s\n", err, out)
-			}
-
-		default:
-			return cli.Exit("Invalid action specified", 1)
+		if ctx.NArg() != 2 {
+			return errors.New("not enough arguments, use --help")
 		}
+
+		host := ctx.Args().Get(0)
+		action := ctx.Args().Get(1)
+
+		if _, ipmiServer := os.LookupEnv("IPMIADDRESS"); !ipmiServer {
+			return errors.New("ipmi server not defined, use --help")
+		}
+		requestPath := fmt.Sprintf("%s/host/%s/%s", os.Getenv("IPMIADDRESS"), host, action)
+
+		if _, ipmiUser := os.LookupEnv("IPMIUSER"); !ipmiUser {
+			return errors.New("ipmi user not defined, use --help")
+		}
+		userCreds := strings.Split(user, ":")
+		credential := Credential{
+			Username: userCreds[0],
+			Password: userCreds[1],
+		}
+
+		postData, _ := json.Marshal(credential)
+
+		resp, err := http.Post(requestPath, "application/json", bytes.NewBuffer(postData))
+		if err != nil {
+			return errors.New("bad request")
+		}
+		fmt.Printf("Status code : %d\n", resp.StatusCode)
 
 		return nil
 	},
