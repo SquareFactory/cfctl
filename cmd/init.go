@@ -259,11 +259,14 @@ func hostFromAddress(addr, role, user, keypath string) *cluster.Host {
 	if user != "" {
 		host.SSH.User = user
 	}
-	if keypath != "" {
-		host.SSH.KeyPath = &keypath
-	}
 
 	_ = defaults.Set(host)
+
+	if keypath == "" {
+		host.SSH.KeyPath = nil
+	} else {
+		host.SSH.KeyPath = &keypath
+	}
 
 	return host
 }

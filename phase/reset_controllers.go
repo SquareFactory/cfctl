@@ -1,9 +1,6 @@
 package phase
 
 import (
-	"strings"
-
-	"github.com/Masterminds/semver"
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/exec"
@@ -107,13 +104,9 @@ func (p *ResetControllers) Run() error {
 
 		log.Debugf("%s: resetting k0s...", h)
 		out, err := h.ExecOutput(h.Configurer.K0sCmdf("reset --data-dir=%s", h.DataDir), exec.Sudo(h))
-		c, _ := semver.NewConstraint("<= 1.22.3+k0s.0")
-		running, _ := semver.NewVersion(h.Metadata.K0sBinaryVersion)
 		if err != nil {
+			log.Debugf("%s: k0s reset failed: %s", h, out)
 			log.Warnf("%s: k0s reported failure: %v", h, err)
-			if c.Check(running) && !strings.Contains(out, "k0s cleanup operations done") {
-				log.Warnf("%s: k0s reset failed, trying k0s cleanup", h)
-			}
 		}
 		log.Debugf("%s: resetting k0s completed", h)
 
