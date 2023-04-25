@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/SquareFactory/cfctl/utils/generators"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli/v2"
@@ -23,7 +24,7 @@ var credential = Credential{}
 var address string
 var ipmiCommand = &cli.Command{
 	Name:        "ipmi",
-	ArgsUsage:   "host action",
+	ArgsUsage:   "hostnames action",
 	Usage:       "Manage compute nodes using ipmi-api",
 	Description: "Send action to IPMI API. Available actions: on, off, cycle, status, soft, reset.",
 	Flags: []cli.Flag{
@@ -54,7 +55,15 @@ var ipmiCommand = &cli.Command{
 			return errors.New("not enough arguments, use --help")
 		}
 
-		host := ctx.Args().Get(0)
+		arg := ctx.Args().Get(0)
+		hostnamesRanges := generators.SplitCommaOutsideOfBrackets(arg)
+
+		var hostnames []string
+		for _, hostnamesRange := range hostnamesRanges {
+			h := generators.ExpandBrackets(hostnamesRange)
+			hostnames = append(hostnames, h...)
+		}
+
 		action := ctx.Args().Get(1)
 
 		client := &http.Client{
@@ -63,31 +72,35 @@ var ipmiCommand = &cli.Command{
 			},
 		}
 
-		requestPath := fmt.Sprintf("%s/host/%s/%s", address, host, action)
-
 		postData, err := json.Marshal(credential)
 		if err != nil {
 			return err
 		}
 
-		resp, err := client.Post(requestPath, "application/json", bytes.NewBuffer(postData))
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-		b, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.WithError(err).Warn("ipmi response body couldn't be read")
-		}
+		for _, host := range hostnames {
 
-		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			log.WithFields(log.Fields{
-				"status": resp.StatusCode,
-				"body":   string(b),
-			}).Error("ipmi API returned non-OK status code")
-			return errors.New("ipmi API returned non-OK status code")
+			requestPath := fmt.Sprintf("%s/host/%s/%s", address, host, action)
+
+			resp, err := client.Post(requestPath, "application/json", bytes.NewBuffer(postData))
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+			b, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.WithError(err).Warn("ipmi response body couldn't be read")
+			}
+
+			if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+				log.WithFields(log.Fields{
+					"status": resp.StatusCode,
+					"body":   string(b),
+				}).Error("ipmi API returned non-OK status code")
+				return errors.New("ipmi API returned non-OK status code")
+			}
+			log.Info(string(b))
+
 		}
-		log.Info(string(b))
 
 		return nil
 	},
