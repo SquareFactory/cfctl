@@ -43,5 +43,5 @@ jobs:
           body_path: bin/checksums.md
           tag_name: ${{ steps.branch_name.outputs.TAG_NAME }}
           name: ${{ steps.branch_name.outputs.TAG_NAME }}
-          draft: true # So we can manually edit before publishing
+          draft: false
           prerelease: ${{ contains(steps.branch_name.outputs.TAG_NAME, '-') }} # v0.1.2-beta1, 1.2.3-rc1
