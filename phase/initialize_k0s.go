@@ -1,6 +1,8 @@
 package phase
 
 import (
+	"fmt"
+
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	log "github.com/sirupsen/logrus"
@@ -47,10 +49,16 @@ func (p *InitializeK0s) Run() error {
 	h := p.leader
 	h.Metadata.IsK0sLeader = true
 
-	if p.Config.Spec.K0s.DynamicConfig || (h.InstallFlags.Include("--enable-dynamic-config") && h.InstallFlags.GetValue("--enable-dynamic-config") != "false") {
+	if p.Config.Spec.K0s.DynamicConfig ||
+		(h.InstallFlags.Include("--enable-dynamic-config") && h.InstallFlags.GetValue("--enable-dynamic-config") != "false") {
 		p.Config.Spec.K0s.DynamicConfig = true
 		h.InstallFlags.AddOrReplace("--enable-dynamic-config")
 		p.SetProp("dynamic-config", true)
+	}
+
+	if Force {
+		log.Warnf("%s: --force given, using k0s install with --force", h)
+		h.InstallFlags.AddOrReplace("--force=true")
 	}
 
 	log.Infof("%s: installing k0s controller", h)
@@ -85,6 +93,12 @@ func (p *InitializeK0s) Run() error {
 	log.Infof("%s: waiting for kubernetes api to respond", h)
 	if err := h.WaitKubeAPIReady(port); err != nil {
 		return err
+	}
+
+	if p.Config.Spec.K0s.DynamicConfig {
+		if err := h.WaitK0sDynamicConfigReady(); err != nil {
+			return fmt.Errorf("dynamic config reconciliation failed: %w", err)
+		}
 	}
 
 	h.Metadata.K0sRunningVersion = p.Config.Spec.K0s.Version

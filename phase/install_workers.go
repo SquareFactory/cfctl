@@ -27,7 +27,7 @@ func (p *InstallWorkers) Prepare(config *v1beta1.Cluster) error {
 	p.Config = config
 	var workers cluster.Hosts = p.Config.Spec.Hosts.Workers()
 	p.hosts = workers.Filter(func(h *cluster.Host) bool {
-		return !h.Reset && (h.Metadata.K0sRunningVersion == "" || !h.Metadata.Ready)
+		return !h.Reset && !h.Metadata.NeedsUpgrade && (h.Metadata.K0sRunningVersion == "" || !h.Metadata.Ready)
 	})
 	p.leader = p.Config.Spec.K0sLeader()
 
@@ -85,7 +85,7 @@ func (p *InstallWorkers) Run() error {
 
 	if !NoWait {
 		defer func() {
-			if err := p.leader.Exec(p.leader.Configurer.K0sCmdf("token invalidate --data-dir=%s %s", p.leader.DataDir, tokenID), exec.Sudo(p.leader), exec.RedactString(token)); err != nil {
+			if err := p.leader.Exec(p.leader.Configurer.K0sCmdf("token invalidate --data-dir=%s %s", p.leader.K0sDataDir(), tokenID), exec.Sudo(p.leader), exec.RedactString(token)); err != nil {
 				log.Warnf("%s: failed to invalidate the worker join token", p.leader)
 			}
 		}()
@@ -121,6 +121,11 @@ func (p *InstallWorkers) Run() error {
 		}
 
 		log.Infof("%s: installing k0s worker", h)
+		if Force {
+			log.Warnf("%s: --force given, using k0s install with --force", h)
+			h.InstallFlags.AddOrReplace("--force=true")
+		}
+
 		cmd, err := h.K0sInstallCommand()
 		if err != nil {
 			return err

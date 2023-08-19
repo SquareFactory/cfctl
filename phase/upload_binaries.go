@@ -29,21 +29,18 @@ func (p *UploadBinaries) Prepare(config *v1beta1.Cluster) error {
 			return false
 		}
 
-		// Nothing to upload
+		// No need to upload, host is going to be reset
 		if h.Reset {
 			return false
 		}
 
-		// The version is already correct
-		if h.Metadata.K0sBinaryVersion == p.Config.Spec.K0s.Version {
-			return false
+		if !p.Config.Spec.K0s.VersionEqual(h.Metadata.K0sBinaryVersion) {
+			log.Debugf("%s: k0s version on host is '%s'", h, h.Metadata.K0sBinaryVersion)
+			return true
 		}
 
-		if !h.FileChanged(h.UploadBinaryPath, h.Configurer.K0sBinaryPath()) {
-			return false
-		}
-
-		return true
+		// If the file has been changed compared to local, re-upload and replace
+		return h.FileChanged(h.UploadBinaryPath, h.Configurer.K0sBinaryPath())
 	})
 	return nil
 }

@@ -8,6 +8,11 @@ import (
 	"github.com/SquareFactory/cfctl/analytics"
 	"github.com/SquareFactory/cfctl/cmd"
 	log "github.com/sirupsen/logrus"
+
+	// blank import to make sure versioninfo is included in the binary
+	_ "github.com/carlmjohnson/versioninfo"
+	// blank import to make sure versioninfo is included in the binary
+	_ "github.com/SquareFactory/cfctl/version"
 )
 
 func handlepanic() {
@@ -29,7 +34,10 @@ func handlepanic() {
 			bt = append(bt, strings.TrimSpace(row))
 		}
 
-		analytics.Client.Publish("panic", map[string]interface{}{"backtrace": strings.Join(bt, "\n")})
+		analytics.Client.Publish(
+			"panic",
+			map[string]interface{}{"backtrace": strings.Join(bt, "\n")},
+		)
 		log.Fatalf("PANIC: %v\n", err)
 	}
 }

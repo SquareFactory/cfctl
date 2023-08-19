@@ -71,13 +71,16 @@ func (p *GatherK0sFacts) Run() error {
 func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 	output, err := h.ExecOutput(h.Configurer.K0sCmdf("version"), exec.Sudo(h))
 	if err != nil {
+		log.Debugf("%s: no 'k0s' binary in PATH", h)
 		return nil
 	}
 
-	h.Metadata.K0sBinaryVersion = strings.TrimPrefix(output, "v")
+	h.Metadata.K0sBinaryVersion = strings.TrimSpace(output)
+
 	log.Debugf("%s: has k0s binary version %s", h, h.Metadata.K0sBinaryVersion)
 
-	if h.IsController() && len(p.Config.Spec.K0s.Config) == 0 && h.Configurer.FileExist(h, h.K0sConfigPath()) {
+	if h.IsController() && len(p.Config.Spec.K0s.Config) == 0 &&
+		h.Configurer.FileExist(h, h.K0sConfigPath()) {
 		cfg, err := h.Configurer.ReadFile(h, h.K0sConfigPath())
 		if cfg != "" && err == nil {
 			log.Infof("%s: found existing configuration", h)
@@ -87,9 +90,44 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 		}
 	}
 
+	var existingServiceScript string
+
+	for _, svc := range []string{"k0scontroller", "k0sworker", "k0sserver"} {
+		if path, err := h.Configurer.ServiceScriptPath(h, svc); err == nil && path != "" {
+			existingServiceScript = path
+			break
+		}
+	}
+
 	output, err = h.ExecOutput(h.Configurer.K0sCmdf("status -o json"), exec.Sudo(h))
 	if err != nil {
-		return nil
+		if existingServiceScript == "" {
+			log.Debugf(
+				"%s: an existing k0s instance is not running and does not seem to have been installed as a service",
+				h,
+			)
+			return nil
+		}
+
+		if Force {
+			log.Warnf(
+				"%s: an existing k0s instance is not running but has been installed as a service at %s - ignoring because --force was given",
+				h,
+				existingServiceScript,
+			)
+			return nil
+		}
+
+		return fmt.Errorf(
+			"k0s doesn't appear to be running but has been installed as a service at %s - please remove it or start the service",
+			existingServiceScript,
+		)
+	}
+
+	if existingServiceScript == "" {
+		return fmt.Errorf(
+			"k0s is running but has not been installed as a service, possibly a non-cfctl managed host or a broken installation - you can try to reset the host by setting `reset: true` on it",
+		)
 	}
 
 	status := k0sstatus{}
@@ -120,7 +158,12 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 	}
 
 	if status.Role != h.Role {
-		return fmt.Errorf("%s: is configured as k0s %s but is already running as %s - role change is not supported", h, h.Role, status.Role)
+		return fmt.Errorf(
+			"%s: is configured as k0s %s but is already running as %s - role change is not supported",
+			h,
+			h.Role,
+			status.Role,
+		)
 	}
 
 	h.Metadata.K0sRunningVersion = strings.TrimPrefix(status.Version, "v")
@@ -131,7 +174,10 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 		for _, a := range status.Args {
 			if strings.HasPrefix(a, "--enable-dynamic-config") && !strings.HasSuffix(a, "false") {
 				if !p.Config.Spec.K0s.DynamicConfig {
-					log.Warnf("%s: controller has dynamic config enabled, but spec.k0s.dynamicConfig was not set in configuration, proceeding in dynamic config mode", h)
+					log.Warnf(
+						"%s: controller has dynamic config enabled, but spec.k0s.dynamicConfig was not set in configuration, proceeding in dynamic config mode",
+						h,
+					)
 					p.Config.Spec.K0s.DynamicConfig = true
 				}
 			}
@@ -139,7 +185,10 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 		if h.InstallFlags.Include("--enable-dynamic-config") {
 			if val := h.InstallFlags.GetValue("--enable-dynamic-config"); val != "false" {
 				if !p.Config.Spec.K0s.DynamicConfig {
-					log.Warnf("%s: controller has --enable-dynamic-config in installFlags, but spec.k0s.dynamicConfig was not set in configuration, proceeding in dynamic config mode", h)
+					log.Warnf(
+						"%s: controller has --enable-dynamic-config in installFlags, but spec.k0s.dynamicConfig was not set in configuration, proceeding in dynamic config mode",
+						h,
+					)
 				}
 				p.Config.Spec.K0s.DynamicConfig = true
 			}
@@ -151,7 +200,10 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 	}
 
 	if h.Role == "controller+worker" && !h.NoTaints {
-		log.Warnf("%s: the controller+worker node will not schedule regular workloads without toleration for node-role.kubernetes.io/master:NoSchedule unless 'noTaints: true' is set", h)
+		log.Warnf(
+			"%s: the controller+worker node will not schedule regular workloads without toleration for node-role.kubernetes.io/master:NoSchedule unless 'noTaints: true' is set",
+			h,
+		)
 	}
 
 	if h.Metadata.NeedsUpgrade {
@@ -176,7 +228,10 @@ func (p *GatherK0sFacts) needsUpgrade(h *cluster.Host) bool {
 	// default-install cluster to one fed by OCI image bundles (ie. airgap)
 	for _, f := range h.Files {
 		if f.IsURL() {
-			log.Debugf("%s: marked for upgrade because there are URL source file uploads for the host", h)
+			log.Debugf(
+				"%s: marked for upgrade because there are URL source file uploads for the host",
+				h,
+			)
 			return true
 		}
 
@@ -195,11 +250,20 @@ func (p *GatherK0sFacts) needsUpgrade(h *cluster.Host) bool {
 	}
 
 	if h.K0sBinaryPath != "" && h.FileChanged(h.K0sBinaryPath, h.Configurer.K0sBinaryPath()) {
-		log.Debugf("%s: marked for upgrade because of a static k0s binary path %s", h, h.K0sBinaryPath)
+		log.Debugf(
+			"%s: marked for upgrade because of a static k0s binary path %s",
+			h,
+			h.K0sBinaryPath,
+		)
 		return true
 	}
 
-	log.Debugf("%s: checking if %s is an upgrade from %s", h, p.Config.Spec.K0s.Version, h.Metadata.K0sRunningVersion)
+	log.Debugf(
+		"%s: checking if %s is an upgrade from %s",
+		h,
+		p.Config.Spec.K0s.Version,
+		h.Metadata.K0sRunningVersion,
+	)
 	target, err := version.NewVersion(p.Config.Spec.K0s.Version)
 	if err != nil {
 		log.Warnf("%s: failed to parse target version: %s", h, err.Error())

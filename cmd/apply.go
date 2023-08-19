@@ -47,19 +47,36 @@ var applyCommand = &cli.Command{
 			Usage:  "Skip downgrade check",
 			Hidden: true,
 		},
+		&cli.BoolFlag{
+			Name:  "force",
+			Usage: "Attempt a forced installation in case of certain failures",
+		},
 		debugFlag,
 		traceFlag,
 		redactFlag,
 		analyticsFlag,
 		upgradeCheckFlag,
 	},
-	Before: actions(initLogging, startCheckUpgrade, initConfig, displayLogo, initAnalytics, displayCopyright, warnOldCache),
-	After:  actions(reportCheckUpgrade, closeAnalytics),
+	Before: actions(
+		initLogging,
+		startCheckUpgrade,
+		initConfig,
+		displayLogo,
+		initAnalytics,
+		displayCopyright,
+		warnOldCache,
+	),
+	After: actions(reportCheckUpgrade, closeAnalytics),
 	Action: func(ctx *cli.Context) error {
 		start := time.Now()
 		phase.NoWait = ctx.Bool("no-wait")
+		phase.Force = ctx.Bool("force")
 
-		manager := phase.Manager{Config: ctx.Context.Value(ctxConfigKey{}).(*v1beta1.Cluster), Concurrency: ctx.Int("concurrency"), ConcurrentUploads: ctx.Int("concurrent-uploads")}
+		manager := phase.Manager{
+			Config:            ctx.Context.Value(ctxConfigKey{}).(*v1beta1.Cluster),
+			Concurrency:       ctx.Int("concurrency"),
+			ConcurrentUploads: ctx.Int("concurrent-uploads"),
+		}
 		lockPhase := &phase.Lock{}
 
 		manager.AddPhase(
@@ -117,7 +134,10 @@ var applyCommand = &cli.Command{
 		var result error
 
 		if result = manager.Run(); result != nil {
-			analytics.Client.Publish("apply-failure", map[string]interface{}{"clusterID": manager.Config.Spec.K0s.Metadata.ClusterID})
+			analytics.Client.Publish(
+				"apply-failure",
+				map[string]interface{}{"clusterID": manager.Config.Spec.K0s.Metadata.ClusterID},
+			)
 			if lf, err := LogFile(); err == nil {
 				if ln, ok := lf.(interface{ Name() string }); ok {
 					log.Errorf("apply failed - log file saved to %s", ln.Name())
@@ -126,7 +146,13 @@ var applyCommand = &cli.Command{
 			return result
 		}
 
-		analytics.Client.Publish("apply-success", map[string]interface{}{"duration": time.Since(start), "clusterID": manager.Config.Spec.K0s.Metadata.ClusterID})
+		analytics.Client.Publish(
+			"apply-success",
+			map[string]interface{}{
+				"duration":  time.Since(start),
+				"clusterID": manager.Config.Spec.K0s.Metadata.ClusterID,
+			},
+		)
 		if kubecfgOut != "" {
 			if err := os.WriteFile(kubecfgOut, []byte(manager.Config.Metadata.Kubeconfig), 0644); err != nil {
 				log.Warnf("failed to write kubeconfig to %s: %v", kubecfgOut, err)
@@ -146,7 +172,9 @@ var applyCommand = &cli.Command{
 			}
 		}
 		if uninstalled {
-			log.Info("There were nodes that got uninstalled during the apply phase. Please remove them from your k0sctl config file")
+			log.Info(
+				"There were nodes that got uninstalled during the apply phase. Please remove them from your cfctl config file",
+			)
 		}
 
 		log.Infof("k0s cluster version %s is now installed", manager.Config.Spec.K0s.Version)

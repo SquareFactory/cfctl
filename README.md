@@ -473,7 +473,7 @@ This must be set `true` to enable the localhost connection.
 
 ###### `spec.hosts[*].reset` &lt;boolean&gt; (optional) (default: `false`)
 
-If set to `true` k0sctl will remove the node from kubernetes and reset k0s on the host.
+If set to `true` cfctl will remove the node from kubernetes and reset k0s on the host.
 
 ### K0s Fields
 

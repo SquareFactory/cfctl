@@ -127,6 +127,7 @@ func (k *K0s) NodeConfig() dig.Mapping {
 		},
 		"spec": dig.Mapping{
 			"api":     k.Config.DigMapping("spec", "api"),
+			"network": k.Config.DigMapping("spec", "network"),
 			"storage": k.Config.DigMapping("spec", "storage"),
 		},
 	}
@@ -143,7 +144,7 @@ func (k K0s) GenerateToken(h *Host, role string, expiry time.Duration) (string, 
 		k0sFlags.Add(fmt.Sprintf("--config %s", shellescape.Quote(h.K0sConfigPath())))
 	}
 
-	k0sFlags.AddOrReplace(fmt.Sprintf("--data-dir=%s", h.DataDir))
+	k0sFlags.AddOrReplace(fmt.Sprintf("--data-dir=%s", h.K0sDataDir()))
 
 	var token string
 	err = retry.Do(
@@ -166,7 +167,30 @@ func (k K0s) GenerateToken(h *Host, role string, expiry time.Duration) (string, 
 
 // GetClusterID uses kubectl to fetch the kube-system namespace uid
 func (k K0s) GetClusterID(h *Host) (string, error) {
-	return h.ExecOutput(h.Configurer.KubectlCmdf(h, "get --data-dir=%s -n kube-system namespace kube-system -o template={{.metadata.uid}}", h.DataDir), exec.Sudo(h))
+	return h.ExecOutput(h.Configurer.KubectlCmdf(h, h.K0sDataDir(), "get -n kube-system namespace kube-system -o template={{.metadata.uid}}"), exec.Sudo(h))
+}
+
+// VersionEqual returns true if the configured k0s version is equal to the given version string
+func (k K0s) VersionEqual(b string) bool {
+	if k.Version == "" {
+		return false
+	}
+
+	if b == "" {
+		return false
+	}
+
+	aVer, err := version.NewVersion(k.Version)
+	if err != nil {
+		return false
+	}
+
+	bVer, err := version.NewVersion(b)
+	if err != nil {
+		return false
+	}
+
+	return aVer.Equal(bVer)
 }
 
 // TokenID returns a token id from a token string that can be used to invalidate the token
