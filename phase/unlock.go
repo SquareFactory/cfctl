@@ -1,7 +1,7 @@
 package phase
 
 import (
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	log "github.com/sirupsen/logrus"
 )
 

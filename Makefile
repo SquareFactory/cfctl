@@ -8,7 +8,7 @@ endif
 ENVIRONMENT ?= development
 PREFIX = /usr/local
 
-LD_FLAGS = -s -w -X github.com/SquareFactory/cfctl/version.Environment=$(ENVIRONMENT) -X github.com/carlmjohnson/versioninfo.Revision=$(GIT_COMMIT) -X github.com/carlmjohnson/versioninfo.Version=$(TAG_NAME)
+LD_FLAGS = -s -w -X github.com/deepsquare-io/cfctl/version.Environment=$(ENVIRONMENT) -X github.com/carlmjohnson/versioninfo.Revision=$(GIT_COMMIT) -X github.com/carlmjohnson/versioninfo.Version=$(TAG_NAME)
 BUILD_FLAGS = -trimpath -a -tags "netgo,osusergo,static_build" -installsuffix netgo -ldflags "$(LD_FLAGS) -extldflags '-static'"
 
 cfctl: $(GO_SRCS)

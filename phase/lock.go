@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SquareFactory/cfctl/analytics"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
-	"github.com/SquareFactory/cfctl/pkg/retry"
+	"github.com/deepsquare-io/cfctl/analytics"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/retry"
 	"github.com/k0sproject/rig/exec"
 	log "github.com/sirupsen/logrus"
 )

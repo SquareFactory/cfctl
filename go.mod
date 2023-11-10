@@ -1,4 +1,4 @@
-module github.com/SquareFactory/cfctl
+module github.com/deepsquare-io/cfctl
 
 go 1.21
 

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	cfg "github.com/SquareFactory/cfctl/configurer"
-	"github.com/SquareFactory/cfctl/configurer/linux"
+	cfg "github.com/deepsquare-io/cfctl/configurer"
+	"github.com/deepsquare-io/cfctl/configurer/linux"
 	"github.com/k0sproject/rig/exec"
 	"github.com/k0sproject/rig/os"
 	"github.com/stretchr/testify/require"
@@ -87,33 +87,57 @@ func TestK0sInstallCommand(t *testing.T) {
 	h.Metadata.IsK0sLeader = false
 	cmd, err = h.K0sInstallCommand()
 	require.NoError(t, err)
-	require.Equal(t, `k0s install controller --data-dir=/tmp/k0s --token-file "from-configurer" --config "from-configurer"`, cmd)
+	require.Equal(
+		t,
+		`k0s install controller --data-dir=/tmp/k0s --token-file "from-configurer" --config "from-configurer"`,
+		cmd,
+	)
 
 	h.Role = "controller+worker"
 	h.Metadata.IsK0sLeader = true
 	cmd, err = h.K0sInstallCommand()
 	require.NoError(t, err)
-	require.Equal(t, `k0s install controller --data-dir=/tmp/k0s --enable-worker --config "from-configurer"`, cmd)
+	require.Equal(
+		t,
+		`k0s install controller --data-dir=/tmp/k0s --enable-worker --config "from-configurer"`,
+		cmd,
+	)
 	h.Metadata.IsK0sLeader = false
 	cmd, err = h.K0sInstallCommand()
 	require.NoError(t, err)
-	require.Equal(t, `k0s install controller --data-dir=/tmp/k0s --enable-worker --token-file "from-configurer" --config "from-configurer"`, cmd)
+	require.Equal(
+		t,
+		`k0s install controller --data-dir=/tmp/k0s --enable-worker --token-file "from-configurer" --config "from-configurer"`,
+		cmd,
+	)
 
 	h.Role = "worker"
 	h.PrivateAddress = "10.0.0.9"
 	cmd, err = h.K0sInstallCommand()
 	require.NoError(t, err)
-	require.Equal(t, `k0s install worker --data-dir=/tmp/k0s --token-file "from-configurer" --kubelet-extra-args="--node-ip=10.0.0.9"`, cmd)
+	require.Equal(
+		t,
+		`k0s install worker --data-dir=/tmp/k0s --token-file "from-configurer" --kubelet-extra-args="--node-ip=10.0.0.9"`,
+		cmd,
+	)
 
 	h.InstallFlags = []string{`--kubelet-extra-args="--foo bar"`}
 	cmd, err = h.K0sInstallCommand()
 	require.NoError(t, err)
-	require.Equal(t, `k0s install worker --kubelet-extra-args="--foo bar --node-ip=10.0.0.9" --data-dir=/tmp/k0s --token-file "from-configurer"`, cmd)
+	require.Equal(
+		t,
+		`k0s install worker --kubelet-extra-args="--foo bar --node-ip=10.0.0.9" --data-dir=/tmp/k0s --token-file "from-configurer"`,
+		cmd,
+	)
 
 	h.InstallFlags = []string{`--enable-cloud-provider`}
 	cmd, err = h.K0sInstallCommand()
 	require.NoError(t, err)
-	require.Equal(t, `k0s install worker --enable-cloud-provider --data-dir=/tmp/k0s --token-file "from-configurer"`, cmd)
+	require.Equal(
+		t,
+		`k0s install worker --enable-cloud-provider --data-dir=/tmp/k0s --token-file "from-configurer"`,
+		cmd,
+	)
 }
 
 func TestValidation(t *testing.T) {

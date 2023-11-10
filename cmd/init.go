@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/creasty/defaults"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/dig"
 	"github.com/k0sproject/rig"
 
@@ -363,8 +363,13 @@ var initCommand = &cli.Command{
 			Kind:       "Cluster",
 			Metadata:   &v1beta1.ClusterMetadata{Name: ctx.String("cluster-name")},
 			Spec: &cluster.Spec{
-				Hosts: buildHosts(addresses, ctx.Int("controller-count"), ctx.String("user"), ctx.String("key-path")),
-				K0s:   &cluster.K0s{},
+				Hosts: buildHosts(
+					addresses,
+					ctx.Int("controller-count"),
+					ctx.String("user"),
+					ctx.String("key-path"),
+				),
+				K0s: &cluster.K0s{},
 			},
 		}
 

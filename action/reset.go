@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/SquareFactory/cfctl/analytics"
-	"github.com/SquareFactory/cfctl/phase"
+	"github.com/deepsquare-io/cfctl/analytics"
+	"github.com/deepsquare-io/cfctl/phase"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/AlecAivazis/survey/v2"

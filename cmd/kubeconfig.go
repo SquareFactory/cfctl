@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/SquareFactory/cfctl/action"
-	"github.com/SquareFactory/cfctl/analytics"
-	"github.com/SquareFactory/cfctl/phase"
+	"github.com/deepsquare-io/cfctl/action"
+	"github.com/deepsquare-io/cfctl/analytics"
+	"github.com/deepsquare-io/cfctl/phase"
 	"github.com/urfave/cli/v2"
 )
 

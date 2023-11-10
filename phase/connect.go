@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
-	"github.com/SquareFactory/cfctl/pkg/retry"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/retry"
 	"github.com/k0sproject/rig"
 	log "github.com/sirupsen/logrus"
 )

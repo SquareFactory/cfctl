@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/alessio/shellescape"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/exec"
 	log "github.com/sirupsen/logrus"
 )

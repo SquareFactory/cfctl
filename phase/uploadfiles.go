@@ -5,9 +5,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/alessio/shellescape"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/exec"
 
 	log "github.com/sirupsen/logrus"
@@ -66,9 +66,13 @@ func (p *UploadFiles) ensureDir(h *cluster.Host, dir, perm, owner string) error 
 		return nil
 	}
 
-	err := p.Wet(h, fmt.Sprintf("create a directory for uploading: `mkdir -p \"%s\"`", dir), func() error {
-		return h.Configurer.MkDir(h, dir, exec.Sudo(h))
-	})
+	err := p.Wet(
+		h,
+		fmt.Sprintf("create a directory for uploading: `mkdir -p \"%s\"`", dir),
+		func() error {
+			return h.Configurer.MkDir(h, dir, exec.Sudo(h))
+		},
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
@@ -131,16 +135,25 @@ func (p *UploadFiles) uploadFile(h *cluster.Host, f *cluster.UploadFile) error {
 		if owner != "" {
 			err := p.Wet(h, fmt.Sprintf("set owner for %s to %s", dest, owner), func() error {
 				log.Debugf("%s: setting owner %s for %s", h, owner, dest)
-				return h.Execf(`chown %s %s`, shellescape.Quote(owner), shellescape.Quote(dest), exec.Sudo(h))
+				return h.Execf(
+					`chown %s %s`,
+					shellescape.Quote(owner),
+					shellescape.Quote(dest),
+					exec.Sudo(h),
+				)
 			})
 			if err != nil {
 				return err
 			}
 		}
-		err := p.Wet(h, fmt.Sprintf("set permissions for %s to %s", dest, s.PermMode), func() error {
-			log.Debugf("%s: setting permissions %s for %s", h, s.PermMode, dest)
-			return h.Configurer.Chmod(h, dest, s.PermMode, exec.Sudo(h))
-		})
+		err := p.Wet(
+			h,
+			fmt.Sprintf("set permissions for %s to %s", dest, s.PermMode),
+			func() error {
+				log.Debugf("%s: setting permissions %s for %s", h, s.PermMode, dest)
+				return h.Configurer.Chmod(h, dest, s.PermMode, exec.Sudo(h))
+			},
+		)
 		if err != nil {
 			return err
 		}
@@ -148,10 +161,14 @@ func (p *UploadFiles) uploadFile(h *cluster.Host, f *cluster.UploadFile) error {
 		if err != nil {
 			return fmt.Errorf("failed to stat %s: %s", src, err)
 		}
-		err = p.Wet(h, fmt.Sprintf("set timestamp for %s to %s", dest, stat.ModTime()), func() error {
-			log.Debugf("%s: touching %s", h, dest)
-			return h.Configurer.Touch(h, dest, stat.ModTime(), exec.Sudo(h))
-		})
+		err = p.Wet(
+			h,
+			fmt.Sprintf("set timestamp for %s to %s", dest, stat.ModTime()),
+			func() error {
+				log.Debugf("%s: touching %s", h, dest)
+				return h.Configurer.Touch(h, dest, stat.ModTime(), exec.Sudo(h))
+			},
+		)
 		if err != nil {
 			return fmt.Errorf("failed to touch %s: %w", dest, err)
 		}
@@ -168,28 +185,45 @@ func (p *UploadFiles) uploadURL(h *cluster.Host, f *cluster.UploadFile) error {
 		return err
 	}
 
-	err := p.Wet(h, fmt.Sprintf("download file %s => %s", f.Source, f.DestinationFile), func() error {
+	err := p.Wet(
+		h,
+		fmt.Sprintf("download file %s => %s", f.Source, f.DestinationFile),
+		func() error {
 
-		return h.Configurer.DownloadURL(h, f.Source, f.DestinationFile, exec.Sudo(h))
-	})
+			return h.Configurer.DownloadURL(h, f.Source, f.DestinationFile, exec.Sudo(h))
+		},
+	)
 	if err != nil {
 		return err
 	}
 
 	if f.PermString != "" {
-		err := p.Wet(h, fmt.Sprintf("set permissions for %s to %s", f.DestinationFile, f.PermString), func() error {
-			return h.Configurer.Chmod(h, f.DestinationFile, f.PermString, exec.Sudo(h))
-		})
+		err := p.Wet(
+			h,
+			fmt.Sprintf("set permissions for %s to %s", f.DestinationFile, f.PermString),
+			func() error {
+				return h.Configurer.Chmod(h, f.DestinationFile, f.PermString, exec.Sudo(h))
+			},
+		)
 		if err != nil {
 			return err
 		}
 	}
 
 	if owner != "" {
-		err := p.Wet(h, fmt.Sprintf("set owner for %s to %s", f.DestinationFile, owner), func() error {
-			log.Debugf("%s: setting owner %s for %s", h, owner, f.DestinationFile)
-			return h.Execf(`chown %s %s`, shellescape.Quote(owner), shellescape.Quote(f.DestinationFile), exec.Sudo(h))
-		})
+		err := p.Wet(
+			h,
+			fmt.Sprintf("set owner for %s to %s", f.DestinationFile, owner),
+			func() error {
+				log.Debugf("%s: setting owner %s for %s", h, owner, f.DestinationFile)
+				return h.Execf(
+					`chown %s %s`,
+					shellescape.Quote(owner),
+					shellescape.Quote(f.DestinationFile),
+					exec.Sudo(h),
+				)
+			},
+		)
 		if err != nil {
 			return err
 		}

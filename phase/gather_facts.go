@@ -3,7 +3,7 @@ package phase
 import (
 	"fmt"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -45,7 +45,9 @@ func (p *GatherFacts) investigateHost(h *cluster.Host) error {
 		ef := cluster.Flags{extra}
 		if over := ef.GetValue("--hostname-override"); over != "" {
 			if h.HostnameOverride != "" && h.HostnameOverride != over {
-				return fmt.Errorf("hostname and installFlags kubelet-extra-args hostname-override mismatch, only define either one")
+				return fmt.Errorf(
+					"hostname and installFlags kubelet-extra-args hostname-override mismatch, only define either one",
+				)
 			}
 			h.HostnameOverride = over
 		}

@@ -3,7 +3,7 @@ package phase
 import (
 	"fmt"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 )
 
 // ValidateHosts performs remote OS detection
@@ -52,7 +52,11 @@ func (p *ValidateHosts) validateUniqueHostname(h *cluster.Host) error {
 
 func (p *ValidateHosts) validateUniquePrivateAddress(h *cluster.Host) error {
 	if p.privateaddrcount[h.PrivateAddress] > 1 {
-		return fmt.Errorf("privateAddress %q is not unique: %s", h.PrivateAddress, h.Metadata.Hostname)
+		return fmt.Errorf(
+			"privateAddress %q is not unique: %s",
+			h.PrivateAddress,
+			h.Metadata.Hostname,
+		)
 	}
 
 	return nil
@@ -60,7 +64,11 @@ func (p *ValidateHosts) validateUniquePrivateAddress(h *cluster.Host) error {
 
 func (p *ValidateHosts) validateUniqueMachineID(h *cluster.Host) error {
 	if p.machineidcount[h.Metadata.MachineID] > 1 {
-		return fmt.Errorf("machine id %s is not unique: %s", h.Metadata.MachineID, h.Metadata.Hostname)
+		return fmt.Errorf(
+			"machine id %s is not unique: %s",
+			h.Metadata.MachineID,
+			h.Metadata.Hostname,
+		)
 	}
 
 	return nil

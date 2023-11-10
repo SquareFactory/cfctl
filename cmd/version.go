@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/SquareFactory/cfctl/analytics"
-	"github.com/SquareFactory/cfctl/integration/github"
-	"github.com/SquareFactory/cfctl/version"
+	"github.com/deepsquare-io/cfctl/analytics"
+	"github.com/deepsquare-io/cfctl/integration/github"
+	"github.com/deepsquare-io/cfctl/version"
 	"github.com/urfave/cli/v2"
 )
 

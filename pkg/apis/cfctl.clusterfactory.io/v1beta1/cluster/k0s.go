@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SquareFactory/cfctl/pkg/retry"
+	"github.com/deepsquare-io/cfctl/pkg/retry"
 	"github.com/jellydator/validation"
 
 	"github.com/alessio/shellescape"

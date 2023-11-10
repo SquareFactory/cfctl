@@ -1,7 +1,7 @@
 package phase
 
 import (
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 )
 
 // Disconnect disconnects from the hosts
@@ -17,7 +17,8 @@ func (p *Disconnect) Title() string {
 // DryRun cleans up the temporary k0s binary from the hosts
 func (p *Disconnect) DryRun() error {
 	_ = p.Config.Spec.Hosts.ParallelEach(func(h *cluster.Host) error {
-		if h.Metadata.K0sBinaryTempFile != "" && h.Configurer.FileExist(h, h.Metadata.K0sBinaryTempFile) {
+		if h.Metadata.K0sBinaryTempFile != "" &&
+			h.Configurer.FileExist(h, h.Metadata.K0sBinaryTempFile) {
 			_ = h.Configurer.DeleteFile(h, h.Metadata.K0sBinaryTempFile)
 		}
 		return nil

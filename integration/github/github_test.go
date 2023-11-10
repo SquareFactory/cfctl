@@ -3,7 +3,7 @@ package github_test
 import (
 	"testing"
 
-	"github.com/SquareFactory/cfctl/integration/github"
+	"github.com/deepsquare-io/cfctl/integration/github"
 )
 
 func TestLatestRelease(t *testing.T) {

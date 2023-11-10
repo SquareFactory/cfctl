@@ -3,9 +3,9 @@ package phase
 import (
 	"fmt"
 
-	"github.com/SquareFactory/cfctl/analytics"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/analytics"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 )
 
 // GenericPhase is a basic phase which gets a config via prepare, sets it into p.Config

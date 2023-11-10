@@ -5,14 +5,14 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/SquareFactory/cfctl/analytics"
-	"github.com/SquareFactory/cfctl/cmd"
+	"github.com/deepsquare-io/cfctl/analytics"
+	"github.com/deepsquare-io/cfctl/cmd"
 	log "github.com/sirupsen/logrus"
 
 	// blank import to make sure versioninfo is included in the binary
 	_ "github.com/carlmjohnson/versioninfo"
 	// blank import to make sure versioninfo is included in the binary
-	_ "github.com/SquareFactory/cfctl/version"
+	_ "github.com/deepsquare-io/cfctl/version"
 )
 
 func handlepanic() {

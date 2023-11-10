@@ -81,7 +81,7 @@ func LatestRelease(preok bool) (Release, error) {
 // fetchLatestRelease fetches the latest release from the GitHub API
 func fetchLatestRelease() (Release, error) {
 	var release Release
-	if err := unmarshalURLBody("https://api.github.com/repos/SquareFactory/cfctl/releases/latest", &release); err != nil {
+	if err := unmarshalURLBody("https://api.github.com/repos/deepsquare-io/cfctl/releases/latest", &release); err != nil {
 		return Release{}, err
 	}
 	return release, nil
@@ -120,7 +120,7 @@ func unmarshalURLBody(url string, o interface{}) error {
 // fetchLatestNonPrereleaseRelease fetches the latest non-prerelease from the GitHub API
 func fetchLatestNonPrereleaseRelease() (Release, error) {
 	var releases []Release
-	if err := unmarshalURLBody("https://api.github.com/repos/SquareFactory/cfctl/releases", &releases); err != nil {
+	if err := unmarshalURLBody("https://api.github.com/repos/deepsquare-io/cfctl/releases", &releases); err != nil {
 		return Release{}, err
 	}
 

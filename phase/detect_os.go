@@ -3,14 +3,14 @@ package phase
 import (
 	"strings"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 
 	// anonymous import is needed to load the os configurers
-	_ "github.com/SquareFactory/cfctl/configurer"
+	_ "github.com/deepsquare-io/cfctl/configurer"
 	// anonymous import is needed to load the os configurers
-	_ "github.com/SquareFactory/cfctl/configurer/linux"
+	_ "github.com/deepsquare-io/cfctl/configurer/linux"
 	// anonymous import is needed to load the os configurers
-	_ "github.com/SquareFactory/cfctl/configurer/linux/enterpriselinux"
+	_ "github.com/deepsquare-io/cfctl/configurer/linux/enterpriselinux"
 
 	log "github.com/sirupsen/logrus"
 )

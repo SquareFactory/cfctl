@@ -1,8 +1,8 @@
 package enterpriselinux
 
 import (
-	"github.com/SquareFactory/cfctl/configurer"
-	k0slinux "github.com/SquareFactory/cfctl/configurer/linux"
+	"github.com/deepsquare-io/cfctl/configurer"
+	k0slinux "github.com/deepsquare-io/cfctl/configurer/linux"
 	"github.com/k0sproject/rig"
 	"github.com/k0sproject/rig/os/registry"
 )

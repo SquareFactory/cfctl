@@ -3,7 +3,7 @@ package v1beta1
 import (
 	"fmt"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 
 	"github.com/creasty/defaults"
 	"github.com/jellydator/validation"

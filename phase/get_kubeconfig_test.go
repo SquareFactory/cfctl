@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/dig"
 	"github.com/k0sproject/rig"
 	"github.com/stretchr/testify/require"
@@ -40,7 +40,10 @@ func TestGetKubeconfig(t *testing.T) {
 		Spec: &cluster.Spec{
 			K0s: &cluster.K0s{Config: dig.Mapping{}},
 			Hosts: []*cluster.Host{
-				{Role: "controller", Connection: rig.Connection{SSH: &rig.SSH{Address: "10.0.0.1", Port: 22}}},
+				{
+					Role:       "controller",
+					Connection: rig.Connection{SSH: &rig.SSH{Address: "10.0.0.1", Port: 22}},
+				},
 			},
 		},
 	}

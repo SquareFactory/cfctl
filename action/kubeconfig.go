@@ -1,8 +1,8 @@
 package action
 
 import (
-	"github.com/SquareFactory/cfctl/phase"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/phase"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 )
 
 type Kubeconfig struct {

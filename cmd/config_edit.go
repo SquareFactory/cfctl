@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/SquareFactory/cfctl/action"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/action"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 
 	"github.com/urfave/cli/v2"
 )

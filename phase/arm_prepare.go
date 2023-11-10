@@ -6,8 +6,8 @@ import (
 	"github.com/k0sproject/version"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 )
 
 var etcdSupportedArchArm64Since = version.MustConstraint(">= v1.22.1+k0s.0")
@@ -67,7 +67,11 @@ func (p *PrepareArm) Run() error {
 }
 
 func (p *PrepareArm) etcdUnsupportedArch(h *cluster.Host) error {
-	log.Warnf("%s: enabling ETCD_UNSUPPORTED_ARCH=%s override - you may encounter problems with etcd", h, h.Metadata.Arch)
+	log.Warnf(
+		"%s: enabling ETCD_UNSUPPORTED_ARCH=%s override - you may encounter problems with etcd",
+		h,
+		h.Metadata.Arch,
+	)
 	h.Environment["ETCD_UNSUPPORTED_ARCH"] = h.Metadata.Arch
 
 	return nil

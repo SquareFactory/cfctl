@@ -9,7 +9,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/SquareFactory/cfctl/utils/generators"
+	"github.com/deepsquare-io/cfctl/utils/generators"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli/v2"

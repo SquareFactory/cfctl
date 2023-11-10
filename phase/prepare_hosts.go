@@ -3,7 +3,7 @@ package phase
 import (
 	"fmt"
 
-	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/deepsquare-io/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/os"
 	"github.com/k0sproject/version"
 	log "github.com/sirupsen/logrus"
@@ -51,7 +51,9 @@ func (p *PrepareHosts) prepareHost(h *cluster.Host) error {
 	}
 
 	// iptables is only required for very old versions of k0s
-	if p.Config.Spec.K0s.Version != nil && !iptablesEmbeddedSince.Check(p.Config.Spec.K0s.Version) && h.NeedIPTables() { //nolint:staticcheck
+	if p.Config.Spec.K0s.Version != nil &&
+		!iptablesEmbeddedSince.Check(p.Config.Spec.K0s.Version) &&
+		h.NeedIPTables() { //nolint:staticcheck
 		pkgs = append(pkgs, "iptables")
 	}
 

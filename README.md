@@ -40,7 +40,7 @@ You can find example Terraform and [bootloose](https://github.com/k0sproject/boo
 
 ### Install from the released binaries
 
-Download the desired version for your operating system and processor architecture from the [cfctl releases page](https://github.com/SquareFactory/cfctl/releases). Make the file executable and place it in a directory available in your `$PATH`.
+Download the desired version for your operating system and processor architecture from the [cfctl releases page](https://github.com/deepsquare-io/cfctl/releases). Make the file executable and place it in a directory available in your `$PATH`.
 
 As the released binaries aren't signed yet, on macOS and Windows, you must first run the executable via "Open" in the context menu and allow running it.
 
@@ -49,7 +49,7 @@ As the released binaries aren't signed yet, on macOS and Windows, you must first
 If you have a working Go toolchain, you can use `go install` to install cfctl to your `$GOPATH/bin`.
 
 ```sh
-go install github.com/SquareFactory/cfctl@latest
+go install github.com/deepsquare-io/cfctl@latest
 ```
 
 #### Shell auto-completions

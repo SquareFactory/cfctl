@@ -1,7 +1,7 @@
 package linux
 
 import (
-	"github.com/SquareFactory/cfctl/configurer"
+	"github.com/deepsquare-io/cfctl/configurer"
 	"github.com/k0sproject/rig/os/linux"
 )
 
