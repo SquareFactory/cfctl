@@ -1,8 +1,12 @@
 package phase
 
 import (
+	"context"
+
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/node"
+	"github.com/SquareFactory/cfctl/pkg/retry"
 	"github.com/k0sproject/rig/exec"
 	log "github.com/sirupsen/logrus"
 )
@@ -44,17 +48,6 @@ func (p *ResetControllers) ShouldRun() bool {
 	return len(p.hosts) > 0
 }
 
-// CleanUp cleans up the environment override files on hosts
-func (p *ResetControllers) CleanUp() {
-	for _, h := range p.hosts {
-		if len(h.Environment) > 0 {
-			if err := h.Configurer.CleanupServiceEnvironment(h, h.K0sServiceName()); err != nil {
-				log.Warnf("%s: failed to clean up service environment: %s", h, err.Error())
-			}
-		}
-	}
-}
-
 // Run the phase
 func (p *ResetControllers) Run() error {
 	for _, h := range p.hosts {
@@ -88,22 +81,30 @@ func (p *ResetControllers) Run() error {
 				log.Warnf("%s: failed to stop k0s: %s", h, err.Error())
 			}
 			log.Debugf("%s: waiting for k0s to stop", h)
-			if err := h.WaitK0sServiceStopped(); err != nil {
-				log.Warnf("%s: failed to wait for k0s to stop: %s", h, err.Error())
+			if err := retry.Timeout(context.TODO(), retry.DefaultTimeout, node.ServiceStoppedFunc(h, h.K0sServiceName())); err != nil {
+				log.Warnf("%s: failed to wait for k0s to stop: %v", h, err)
 			}
 			log.Debugf("%s: stopping k0s completed", h)
 		}
 
-		log.Debugf("%s: leaving etcd...", h)
 		if !p.NoLeave {
-			if err := p.leader.LeaveEtcd(h); err != nil {
+			log.Debugf("%s: leaving etcd...", h)
+
+			etcdAddress := h.SSH.Address
+			if h.PrivateAddress != "" {
+				etcdAddress = h.PrivateAddress
+			}
+			if err := h.Exec(h.Configurer.K0sCmdf("etcd leave --peer-address %s --datadir %s", etcdAddress, h.K0sDataDir()), exec.Sudo(h)); err != nil {
 				log.Warnf("%s: failed to leave etcd: %s", h, err.Error())
 			}
+			log.Debugf("%s: leaving etcd completed", h)
 		}
-		log.Debugf("%s: leaving etcd completed", h)
 
 		log.Debugf("%s: resetting k0s...", h)
-		out, err := h.ExecOutput(h.Configurer.K0sCmdf("reset --data-dir=%s", h.K0sDataDir()), exec.Sudo(h))
+		out, err := h.ExecOutput(
+			h.Configurer.K0sCmdf("reset --data-dir=%s", h.K0sDataDir()),
+			exec.Sudo(h),
+		)
 		if err != nil {
 			log.Debugf("%s: k0s reset failed: %s", h, out)
 			log.Warnf("%s: k0s reported failure: %v", h, err)
@@ -112,9 +113,20 @@ func (p *ResetControllers) Run() error {
 
 		log.Debugf("%s: removing config...", h)
 		if dErr := h.Configurer.DeleteFile(h, h.Configurer.K0sConfigPath()); dErr != nil {
-			log.Warnf("%s: failed to remove existing configuration %s: %s", h, h.Configurer.K0sConfigPath(), dErr)
+			log.Warnf(
+				"%s: failed to remove existing configuration %s: %s",
+				h,
+				h.Configurer.K0sConfigPath(),
+				dErr,
+			)
 		}
 		log.Debugf("%s: removing config completed", h)
+
+		if len(h.Environment) > 0 {
+			if err := h.Configurer.CleanupServiceEnvironment(h, h.K0sServiceName()); err != nil {
+				log.Warnf("%s: failed to clean up service environment: %s", h, err.Error())
+			}
+		}
 
 		log.Infof("%s: reset", h)
 	}

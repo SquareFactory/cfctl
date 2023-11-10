@@ -1,12 +1,15 @@
 package phase
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/k0sproject/rig/os"
+	"github.com/k0sproject/version"
 	log "github.com/sirupsen/logrus"
 )
+
+var iptablesEmbeddedSince = version.MustConstraint(">= v1.22.1+k0s.0")
 
 // PrepareHosts installs required packages and so on on the hosts.
 type PrepareHosts struct {
@@ -47,7 +50,8 @@ func (p *PrepareHosts) prepareHost(h *cluster.Host) error {
 		pkgs = append(pkgs, "curl")
 	}
 
-	if h.NeedIPTables() {
+	// iptables is only required for very old versions of k0s
+	if p.Config.Spec.K0s.Version != nil && !iptablesEmbeddedSince.Check(p.Config.Spec.K0s.Version) && h.NeedIPTables() { //nolint:staticcheck
 		pkgs = append(pkgs, "iptables")
 	}
 
@@ -55,9 +59,12 @@ func (p *PrepareHosts) prepareHost(h *cluster.Host) error {
 		pkgs = append(pkgs, "inetutils")
 	}
 
-	if len(pkgs) > 0 {
-		log.Infof("%s: installing packages (%s)", h, strings.Join(pkgs, ", "))
-		if err := h.Configurer.InstallPackage(h, pkgs...); err != nil {
+	for _, pkg := range pkgs {
+		err := p.Wet(h, fmt.Sprintf("install package %s", pkg), func() error {
+			log.Infof("%s: installing package %s", h, pkg)
+			return h.Configurer.InstallPackage(h, pkg)
+		})
+		if err != nil {
 			return err
 		}
 	}

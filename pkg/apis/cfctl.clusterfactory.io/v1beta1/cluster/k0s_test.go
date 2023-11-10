@@ -3,7 +3,10 @@ package cluster
 import (
 	"testing"
 
+	"github.com/creasty/defaults"
+	"github.com/k0sproject/version"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
 
 func TestTokenID(t *testing.T) {
@@ -12,4 +15,29 @@ func TestTokenID(t *testing.T) {
 	id, err := TokenID(token)
 	require.NoError(t, err)
 	require.Equal(t, "i6i3yg", id)
+}
+
+func TestUnmarshal(t *testing.T) {
+	t.Run("version given", func(t *testing.T) {
+		k0s := &K0s{}
+		err := yaml.Unmarshal([]byte("version: 0.11.0-rc1\ndynamicConfig: false\n"), k0s)
+		require.NoError(t, err)
+		require.Equal(t, "v0.11.0-rc1", k0s.Version.String())
+		require.NoError(t, k0s.Validate())
+	})
+
+	t.Run("version not given", func(t *testing.T) {
+		k0s := &K0s{}
+		err := yaml.Unmarshal([]byte("dynamicConfig: false\n"), k0s)
+		require.NoError(t, err)
+		require.NoError(t, k0s.Validate())
+	})
+}
+
+func TestVersionDefaulting(t *testing.T) {
+	t.Run("version given", func(t *testing.T) {
+		k0s := &K0s{Version: version.MustParse("v0.11.0-rc1")}
+		require.NoError(t, defaults.Set(k0s))
+		require.NoError(t, k0s.Validate())
+	})
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
 	"github.com/adrg/xdg"
+	"github.com/k0sproject/version"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -29,7 +30,8 @@ func (p *DownloadBinaries) Title() string {
 func (p *DownloadBinaries) Prepare(config *v1beta1.Cluster) error {
 	p.Config = config
 	p.hosts = p.Config.Spec.Hosts.Filter(func(h *cluster.Host) bool {
-		return !h.Reset && h.UploadBinary && h.Metadata.K0sBinaryVersion != config.Spec.K0s.Version
+		return !h.Reset && h.UploadBinary &&
+			!h.Metadata.K0sBinaryVersion.Equal(config.Spec.K0s.Version)
 	})
 	return nil
 }
@@ -48,11 +50,16 @@ func (p *DownloadBinaries) Run() error {
 			continue
 		}
 
-		bin := &binary{arch: h.Metadata.Arch, os: h.Configurer.Kind(), version: p.Config.Spec.K0s.Version}
+		bin := &binary{
+			arch:    h.Metadata.Arch,
+			os:      h.Configurer.Kind(),
+			version: p.Config.Spec.K0s.Version,
+		}
 
 		// find configuration defined binpaths and use instead of downloading a new one
 		for _, v := range p.hosts {
-			if v.Metadata.Arch == bin.arch && v.Configurer.Kind() == bin.os && v.K0sBinaryPath != "" {
+			if v.Metadata.Arch == bin.arch && v.Configurer.Kind() == bin.os &&
+				v.K0sBinaryPath != "" {
 				bin.path = h.K0sBinaryPath
 			}
 		}
@@ -85,12 +92,18 @@ func (p *DownloadBinaries) Run() error {
 type binary struct {
 	arch    string
 	os      string
-	version string
+	version *version.Version
 	path    string
 }
 
 func (b *binary) download() error {
-	fn := path.Join("cfctl", "k0s", b.os, b.arch, "k0s-"+b.version+b.ext())
+	fn := path.Join(
+		"cfctl",
+		"k0s",
+		b.os,
+		b.arch,
+		"k0s-"+strings.TrimPrefix(b.version.String(), "v")+b.ext(),
+	)
 	p, err := xdg.SearchCacheFile(fn)
 	if err == nil {
 		b.path = p
@@ -118,11 +131,23 @@ func (b binary) ext() string {
 }
 
 func (b binary) url() string {
-	return fmt.Sprintf("https://github.com/k0sproject/k0s/releases/download/v%s/k0s-v%s-%s%s", strings.TrimPrefix(b.version, "v"), strings.TrimPrefix(b.version, "v"), b.arch, b.ext())
+	v := strings.ReplaceAll(strings.TrimPrefix(b.version.String(), "v"), "+", "%2B")
+	return fmt.Sprintf(
+		"https://github.com/k0sproject/k0s/releases/download/v%[1]s/k0s-v%[1]s-%[2]s%[3]s",
+		v,
+		b.arch,
+		b.ext(),
+	)
 }
 
 func (b binary) downloadTo(path string) error {
-	log.Infof("downloading k0s version %s binary for %s-%s from %s", b.version, b.os, b.arch, b.url())
+	log.Infof(
+		"downloading k0s version %s binary for %s-%s from %s",
+		b.version,
+		b.os,
+		b.arch,
+		b.url(),
+	)
 
 	var err error
 

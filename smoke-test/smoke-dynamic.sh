@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 CFCTL_CONFIG=${CFCTL_CONFIG:-"cfctl-dynamic.yaml"}
 
@@ -18,10 +18,10 @@ max_retry=5
 counter=0
 echo "* Verifying dynamic config reconciliation was a success"
 until ../cfctl config status -o json --config "${CFCTL_CONFIG}" | grep -q "SuccessfulReconcile"; do
-   [[ counter -eq $max_retry ]] && echo "Failed!" && exit 1
+   [ $counter -eq $max_retry ] && echo "Failed!" && exit 1
    echo "* Waiting for a couple of seconds to retry"
    sleep 5
-   ((counter++))
+   counter=$((counter + 1))
 done
 
 echo "* OK"

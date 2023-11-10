@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 CFCTL_CONFIG=${CFCTL_CONFIG:-"cfctl.yaml"}
 

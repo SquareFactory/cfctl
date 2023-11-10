@@ -1,11 +1,13 @@
 package enterpriselinux
 
 import (
+	"strings"
+
 	"github.com/SquareFactory/cfctl/configurer"
 	k0slinux "github.com/SquareFactory/cfctl/configurer/linux"
+
 	"github.com/k0sproject/rig"
 	"github.com/k0sproject/rig/os/registry"
-	"strings"
 )
 
 // Fedora provides OS support for Fedora
@@ -20,9 +22,7 @@ func init() {
 			return os.ID == "fedora" && !strings.Contains(os.Name, "CoreOS")
 		},
 		func() interface{} {
-			linuxType := &Fedora{}
-			linuxType.PathFuncs = interface{}(linuxType).(configurer.PathFuncs)
-			return linuxType
+			return &Fedora{}
 		},
 	)
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/SquareFactory/cfctl/configurer"
 	"github.com/k0sproject/rig/exec"
 	"github.com/stretchr/testify/require"
 )
@@ -44,13 +43,11 @@ func (m mockHost) Sudo(string) (string, error) {
 	return "", nil
 }
 
-// TestPaths tests the slightly weird way to perform function overloading
 func TestPaths(t *testing.T) {
 	fc := &Flatcar{}
-	fc.PathFuncs = interface{}(fc).(configurer.PathFuncs)
+	fc.SetPath("K0sBinaryPath", "/opt/bin/k0s")
 
 	ubuntu := &Ubuntu{}
-	ubuntu.PathFuncs = interface{}(ubuntu).(configurer.PathFuncs)
 
 	h1 := &mockHost{
 		ExecFError: false,
@@ -66,8 +63,16 @@ func TestPaths(t *testing.T) {
 	require.Equal(t, "/usr/local/bin/k0s --help", ubuntu.K0sCmdf("--help"))
 
 	require.Equal(t, "/var/lib/k0s/pki/admin.conf", fc.KubeconfigPath(h1, fc.DataDirDefaultPath()))
-	require.Equal(t, "/var/lib/k0s/pki/admin.conf", ubuntu.KubeconfigPath(h1, ubuntu.DataDirDefaultPath()))
+	require.Equal(
+		t,
+		"/var/lib/k0s/pki/admin.conf",
+		ubuntu.KubeconfigPath(h1, ubuntu.DataDirDefaultPath()),
+	)
 
 	require.Equal(t, "/var/lib/k0s/kubelet.conf", fc.KubeconfigPath(h2, fc.DataDirDefaultPath()))
-	require.Equal(t, "/var/lib/k0s/kubelet.conf", ubuntu.KubeconfigPath(h2, ubuntu.DataDirDefaultPath()))
+	require.Equal(
+		t,
+		"/var/lib/k0s/kubelet.conf",
+		ubuntu.KubeconfigPath(h2, ubuntu.DataDirDefaultPath()),
+	)
 }

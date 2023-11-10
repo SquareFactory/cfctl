@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/creasty/defaults"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/jellydator/validation"
 )
 
 // Spec defines cluster config spec section
@@ -28,6 +28,14 @@ func (s *Spec) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return defaults.Set(s)
 }
 
+// SetDefaults sets defaults
+func (s *Spec) SetDefaults() {
+	if s.K0s == nil {
+		s.K0s = &K0s{}
+		_ = defaults.Set(s.K0s)
+	}
+}
+
 // K0sLeader returns a controller host that is selected to be a "leader",
 // or an initial node, a node that creates join tokens for other controllers.
 func (s *Spec) K0sLeader() *Host {
@@ -36,7 +44,7 @@ func (s *Spec) K0sLeader() *Host {
 
 		// Pick the first controller that reports to be running and persist the choice
 		for _, h := range controllers {
-			if !h.Reset && h.Metadata.K0sBinaryVersion != "" && h.Metadata.K0sRunningVersion != "" {
+			if !h.Reset && h.Metadata.K0sBinaryVersion != nil && h.Metadata.K0sRunningVersion != nil {
 				s.k0sLeader = h
 				break
 			}

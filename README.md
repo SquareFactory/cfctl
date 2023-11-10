@@ -34,7 +34,7 @@ INFO Tip: To access the cluster you can now fetch the admin kubeconfig using:
 INFO      cfctl kubeconfig
 ```
 
-You can find example Terraform and Footloose configurations in the [examples/](examples/) directory.
+You can find example Terraform and [bootloose](https://github.com/k0sproject/bootloose) configurations in the [examples/](examples/) directory.
 
 ## Installation
 
@@ -455,7 +455,7 @@ IP address of the host
 
 Username to log in as.
 
-###### `spec.hosts[*].ssh.port` &lt;string&gt; (required)
+###### `spec.hosts[*].ssh.port` &lt;number&gt; (required)
 
 TCP port of the SSH service on the host.
 
@@ -471,6 +471,83 @@ Localhost connection options. Can be used to use the local host running cfctl as
 
 This must be set `true` to enable the localhost connection.
 
+##### `spec.hosts[*].openSSH` &lt;mapping&gt; (optional)
+
+An alternative SSH client protocol that uses the system's openssh client for connections.
+
+Example:
+
+```yaml
+spec:
+  hosts:
+    - role: controller
+      openSSH:
+        address: 10.0.0.2
+```
+
+The only required field is the `address` and it can also be a hostname that is found in the ssh config. All other options such as user, port and keypath will use the same defaults as if running `ssh` from the command-line or will use values found from the ssh config.
+
+An example SSH config:
+
+```
+Host controller1
+  Hostname 10.0.0.1
+  Port 2222
+  IdentityFile ~/.ssh/id_cluster_esa
+```
+
+If this is in your `~/.ssh/config`, you can simply use the host alias as the address in your cfctl config:
+
+```yaml
+spec:
+  hosts:
+    - role: controller
+      openSSH:
+        address: controller1
+        # if the ssh configuration is in a different file, you can use:
+        # configPath: /path/to/config
+```
+
+###### `spec.hosts[*].openSSH.address` &lt;string&gt; (required)
+
+IP address, hostname or ssh config host alias of the host
+
+###### `spec.hosts[*].openSSH.user` &lt;string&gt; (optional)
+
+Username to connect as.
+
+###### `spec.hosts[*].openSSH.port` &lt;number&gt; (optional)
+
+Remote port.
+
+###### `spec.hosts[*].openSSH.keyPath` &lt;string&gt; (optional)
+
+Path to private key.
+
+###### `spec.hosts[*].openSSH.configPath` &lt;string&gt; (optional)
+
+Path to ssh config, defaults to ~/.ssh/config with fallback to /etc/ssh/ssh_config.
+
+###### `spec.hosts[*].openSSH.disableMultiplexing` &lt;boolean&gt; (optional)
+
+The default mode of operation is to use connection multiplexing where a ControlMaster connection is opened and the subsequent connections to the same host use the master connection over a socket to communicate to the host.
+
+If this is disabled by setting `disableMultiplexing: true`, running every remote command will require reconnecting and reauthenticating to the host.
+
+###### `spec.hosts[*].openSSH.options` &lt;mapping&gt; (optional)
+
+Additional options as key/value pairs to use when running the ssh client.
+
+Example:
+
+```yaml
+openSSH:
+  address: host
+  options:
+    ForwardAgent: true # -o ForwardAgent=yes
+    StrictHostkeyChecking: false # -o StrictHostkeyChecking: no
+```
+
 ###### `spec.hosts[*].reset` &lt;boolean&gt; (optional) (default: `false`)
 
 If set to `true` cfctl will remove the node from kubernetes and reset k0s on the host.
@@ -480,6 +557,12 @@ If set to `true` cfctl will remove the node from kubernetes and reset k0s on the
 ##### `spec.k0s.version` &lt;string&gt; (optional) (default: auto-discovery)
 
 The version of k0s to deploy. When left out, cfctl will default to using the latest released version of k0s or the version already running on the cluster.
+
+##### `spec.k0s.versionChannel` &lt;string&gt; (optional) (default: `stable`)
+
+Possible values are `stable` and `latest`.
+
+When `spec.k0s.version` is left undefined, this setting can be set to `latest` to allow cfctl to include k0s pre-releases when looking for the latest version. The default is to only look for stable releases.
 
 ##### `spec.k0s.dynamicConfig` &lt;boolean&gt; (optional) (default: false)
 

@@ -1,30 +1,31 @@
 package phase
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
 
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
+	"github.com/SquareFactory/cfctl/pkg/node"
 	"github.com/k0sproject/dig"
 	"github.com/k0sproject/rig/exec"
 	"github.com/k0sproject/version"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 )
 
 type k0sstatus struct {
-	Version       string      `json:"Version"`
-	Pid           int         `json:"Pid"`
-	PPid          int         `json:"PPid"`
-	Role          string      `json:"Role"`
-	SysInit       string      `json:"SysInit"`
-	StubFile      string      `json:"StubFile"`
-	Workloads     bool        `json:"Workloads"`
-	Args          []string    `json:"Args"`
-	ClusterConfig dig.Mapping `json:"ClusterConfig"`
-	K0sVars       dig.Mapping `json:"K0sVars"`
+	Version       *version.Version `json:"Version"`
+	Pid           int              `json:"Pid"`
+	PPid          int              `json:"PPid"`
+	Role          string           `json:"Role"`
+	SysInit       string           `json:"SysInit"`
+	StubFile      string           `json:"StubFile"`
+	Workloads     bool             `json:"Workloads"`
+	Args          []string         `json:"Args"`
+	ClusterConfig dig.Mapping      `json:"ClusterConfig"`
+	K0sVars       dig.Mapping      `json:"K0sVars"`
 }
 
 func (k *k0sstatus) isSingle() bool {
@@ -75,18 +76,20 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 		return nil
 	}
 
-	h.Metadata.K0sBinaryVersion = strings.TrimSpace(output)
+	binVersion, err := version.NewVersion(strings.TrimSpace(output))
+	if err != nil {
+		return fmt.Errorf("failed to parse installed k0s version: %w", err)
+	}
+
+	h.Metadata.K0sBinaryVersion = binVersion
 
 	log.Debugf("%s: has k0s binary version %s", h, h.Metadata.K0sBinaryVersion)
 
-	if h.IsController() && len(p.Config.Spec.K0s.Config) == 0 &&
-		h.Configurer.FileExist(h, h.K0sConfigPath()) {
+	if h.IsController() && h.Configurer.FileExist(h, h.K0sConfigPath()) {
 		cfg, err := h.Configurer.ReadFile(h, h.K0sConfigPath())
 		if cfg != "" && err == nil {
 			log.Infof("%s: found existing configuration", h)
-			if err := yaml.Unmarshal([]byte(cfg), &p.Config.Spec.K0s.Config); err != nil {
-				return fmt.Errorf("failed to parse existing configuration: %s", err.Error())
-			}
+			h.Metadata.K0sExistingConfig = cfg
 		}
 	}
 
@@ -137,7 +140,7 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 		return nil
 	}
 
-	if status.Version == "" || status.Role == "" || status.Pid == 0 {
+	if status.Version == nil || status.Role == "" || status.Pid == 0 {
 		log.Debugf("%s: k0s is not running", h)
 		return nil
 	}
@@ -166,7 +169,11 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 		)
 	}
 
-	h.Metadata.K0sRunningVersion = strings.TrimPrefix(status.Version, "v")
+	h.Metadata.K0sRunningVersion = status.Version
+	if p.Config.Spec.K0s.Version == nil {
+		p.Config.Spec.K0s.Version = status.Version
+	}
+
 	h.Metadata.NeedsUpgrade = p.needsUpgrade(h)
 
 	log.Infof("%s: is running k0s %s version %s", h, h.Role, h.Metadata.K0sRunningVersion)
@@ -212,17 +219,21 @@ func (p *GatherK0sFacts) investigateK0s(h *cluster.Host) error {
 
 	if !h.IsController() {
 		log.Infof("%s: checking if worker %s has joined", p.leader, h.Metadata.Hostname)
-		ready, err := h.KubeNodeReady()
-		if err != nil {
+		if err := node.KubeNodeReadyFunc(h)(context.Background()); err != nil {
 			log.Debugf("%s: failed to get ready status: %s", h, err.Error())
+		} else {
+			h.Metadata.Ready = true
 		}
-		h.Metadata.Ready = ready
 	}
 
 	return nil
 }
 
 func (p *GatherK0sFacts) needsUpgrade(h *cluster.Host) bool {
+	if h.Reset {
+		return false
+	}
+
 	// If supplimental files or a k0s binary have been specified explicitly,
 	// always upgrade.  This covers the scenario where a user moves from a
 	// default-install cluster to one fed by OCI image bundles (ie. airgap)
@@ -258,22 +269,5 @@ func (p *GatherK0sFacts) needsUpgrade(h *cluster.Host) bool {
 		return true
 	}
 
-	log.Debugf(
-		"%s: checking if %s is an upgrade from %s",
-		h,
-		p.Config.Spec.K0s.Version,
-		h.Metadata.K0sRunningVersion,
-	)
-	target, err := version.NewVersion(p.Config.Spec.K0s.Version)
-	if err != nil {
-		log.Warnf("%s: failed to parse target version: %s", h, err.Error())
-		return false
-	}
-	current, err := version.NewVersion(h.Metadata.K0sRunningVersion)
-	if err != nil {
-		log.Warnf("%s: failed to parse running version: %s", h, err.Error())
-		return false
-	}
-
-	return target.GreaterThan(current)
+	return p.Config.Spec.K0s.Version.GreaterThan(h.Metadata.K0sRunningVersion)
 }

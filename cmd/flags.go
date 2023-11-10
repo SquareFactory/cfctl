@@ -16,6 +16,7 @@ import (
 	"github.com/SquareFactory/cfctl/integration/segment"
 	"github.com/SquareFactory/cfctl/phase"
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1"
+	"github.com/SquareFactory/cfctl/pkg/retry"
 	cfctl "github.com/SquareFactory/cfctl/version"
 	"github.com/a8m/envsubst"
 	"github.com/adrg/xdg"
@@ -29,6 +30,8 @@ import (
 )
 
 type ctxConfigKey struct{}
+type ctxManagerKey struct{}
+type ctxLogFileKey struct{}
 
 var (
 	debugFlag = &cli.BoolFlag{
@@ -36,6 +39,12 @@ var (
 		Usage:   "Enable debug logging",
 		Aliases: []string{"d"},
 		EnvVars: []string{"DEBUG"},
+	}
+
+	dryRunFlag = &cli.BoolFlag{
+		Name:    "dry-run",
+		Usage:   "Do not alter cluster state, just print what would be done (EXPERIMENTAL)",
+		EnvVars: []string{"DRY_RUN"},
 	}
 
 	traceFlag = &cli.BoolFlag{
@@ -81,6 +90,26 @@ var (
 		Name:  "concurrent-uploads",
 		Usage: "Maximum number of files to upload in parallel, set to 0 for unlimited",
 		Value: 5,
+	}
+
+	retryTimeoutFlag = &cli.DurationFlag{
+		Name:  "default-timeout",
+		Usage: "Default timeout when waiting for node state changes",
+		Value: retry.DefaultTimeout,
+		Action: func(_ *cli.Context, d time.Duration) error {
+			retry.DefaultTimeout = d
+			return nil
+		},
+	}
+
+	retryIntervalFlag = &cli.DurationFlag{
+		Name:  "retry-interval",
+		Usage: "Retry interval when waiting for node state changes",
+		Value: retry.Interval,
+		Action: func(_ *cli.Context, d time.Duration) error {
+			retry.Interval = d
+			return nil
+		},
 	}
 
 	Colorize = aurora.NewAurora(false)
@@ -164,7 +193,11 @@ func warnOldCache(_ *cli.Context) error {
 	}
 	for _, p := range olds {
 		if _, err := os.Stat(p); err == nil {
-			log.Warnf("An old cache directory still exists at %s, cfctl now uses %s", p, path.Join(xdg.CacheHome, "cfctl"))
+			log.Warnf(
+				"An old cache directory still exists at %s, cfctl now uses %s",
+				p,
+				path.Join(xdg.CacheHome, "cfctl"),
+			)
 		}
 	}
 	return nil
@@ -192,6 +225,26 @@ func closeAnalytics(_ *cli.Context) error {
 	return nil
 }
 
+func initManager(ctx *cli.Context) error {
+	c, ok := ctx.Context.Value(ctxConfigKey{}).(*v1beta1.Cluster)
+	if c == nil || !ok {
+		return fmt.Errorf("cluster config not available in context")
+	}
+
+	manager, err := phase.NewManager(c)
+	if err != nil {
+		return fmt.Errorf("failed to initialize phase manager: %w", err)
+	}
+
+	manager.Concurrency = ctx.Int("concurrency")
+	manager.ConcurrentUploads = ctx.Int("concurrent-uploads")
+	manager.DryRun = ctx.Bool("dry-run")
+
+	ctx.Context = context.WithValue(ctx.Context, ctxManagerKey{}, manager)
+
+	return nil
+}
+
 // initLogging initializes the logger
 func initLogging(ctx *cli.Context) error {
 	log.SetLevel(log.TraceLevel)
@@ -199,7 +252,7 @@ func initLogging(ctx *cli.Context) error {
 	initScreenLogger(logLevelFromCtx(ctx, log.InfoLevel))
 	exec.DisableRedact = ctx.Bool("no-redact")
 	rig.SetLogger(log.StandardLogger())
-	return initFileLogger()
+	return initFileLogger(ctx)
 }
 
 // initSilentLogging initializes the logger in silent mode
@@ -210,7 +263,7 @@ func initSilentLogging(ctx *cli.Context) error {
 	exec.DisableRedact = ctx.Bool("no-redact")
 	initScreenLogger(logLevelFromCtx(ctx, log.FatalLevel))
 	rig.SetLogger(log.StandardLogger())
-	return initFileLogger()
+	return initFileLogger(ctx)
 }
 
 func logLevelFromCtx(ctx *cli.Context, defaultLevel log.Level) log.Level {
@@ -227,18 +280,19 @@ func initScreenLogger(lvl log.Level) {
 	log.AddHook(screenLoggerHook(lvl))
 }
 
-func initFileLogger() error {
+func initFileLogger(ctx *cli.Context) error {
 	lf, err := LogFile()
 	if err != nil {
 		return err
 	}
 	log.AddHook(fileLoggerHook(lf))
+	ctx.Context = context.WithValue(ctx.Context, ctxLogFileKey{}, lf.Name())
 	return nil
 }
 
 const logPath = "cfctl/cfctl.log"
 
-func LogFile() (io.Writer, error) {
+func LogFile() (*os.File, error) {
 	fn, err := xdg.SearchCacheFile(logPath)
 	if err != nil {
 		fn, err = xdg.CacheFile(logPath)
@@ -252,7 +306,11 @@ func LogFile() (io.Writer, error) {
 		return nil, fmt.Errorf("Failed to open log %s: %s", fn, err.Error())
 	}
 
-	_, _ = fmt.Fprintf(logFile, "time=\"%s\" level=info msg=\"###### New session ######\"\n", time.Now().Format(time.RFC822))
+	_, _ = fmt.Fprintf(
+		logFile,
+		"time=\"%s\" level=info msg=\"###### New session ######\"\n",
+		time.Now().Format(time.RFC822),
+	)
 
 	return logFile, nil
 }
@@ -344,8 +402,11 @@ func screenLoggerHook(lvl log.Level) *loghook {
 	}
 
 	l := &loghook{
-		Writer:    writer,
-		Formatter: &log.TextFormatter{DisableTimestamp: lvl < log.DebugLevel, ForceColors: forceColors},
+		Writer: writer,
+		Formatter: &log.TextFormatter{
+			DisableTimestamp: lvl < log.DebugLevel,
+			ForceColors:      forceColors,
+		},
 	}
 
 	l.SetLevel(lvl)

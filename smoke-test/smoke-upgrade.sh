@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 CFCTL_CONFIG=${CFCTL_CONFIG:-"cfctl.yaml"}
 
@@ -10,19 +10,22 @@ trap cleanup EXIT
 deleteCluster
 createCluster
 
+remoteCommand() {
+  local userhost="$1"
+  shift
+  echo "* Running command on ${userhost}: $*"
+  bootloose ssh "${userhost}" -- "$*"
+}
+
 # Create config with older version and apply
 K0S_VERSION="${K0S_FROM}"
 echo "Installing ${K0S_VERSION}"
 ../cfctl apply --config "${CFCTL_CONFIG}" --debug
+remoteCommand "root@manager0" "k0s version | grep -q ${K0S_FROM}"
 
-echo "Stopping k0s to verify the 'installed but not running' detection"
-footloose ssh root@manager0 -- k0s stop
+K0S_VERSION=$(curl -s "https://docs.k0sproject.io/stable.txt")
 
-# Create config with blank version (to use latest) and apply as upgrade
-K0S_VERSION="$(curl https://api.github.com/repos/k0sproject/k0s/releases | grep tag_name | cut -d"\"" -f4 | grep "+k0s" | sed -r 's/^(v[0-9]+\.[0-9]+\.[0-9]+)\+/\19999+/g' | sort -r -t "." -k1,5n | head -1 | sed 's/9999//')"
-
-echo "Upgrading to ${K0S_VERSION} (should fail)"
-../cfctl apply --config "${CFCTL_CONFIG}" --debug && exit 1
-
-echo "Upgrading to ${K0S_VERSION} using --force"
-../cfctl apply --config "${CFCTL_CONFIG}" --debug --force
+# Create config with latest version and apply as upgrade
+echo "Upgrading to k0s ${K0S_VERSION}"
+../cfctl apply --config "${CFCTL_CONFIG}" --debug
+remoteCommand "root@manager0" "k0s version | grep -q ${K0S_VERSION}"

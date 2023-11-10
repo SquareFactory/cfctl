@@ -1,8 +1,12 @@
 package v1beta1
 
 import (
+	"fmt"
+
 	"github.com/SquareFactory/cfctl/pkg/apis/cfctl.clusterfactory.io/v1beta1/cluster"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
+
+	"github.com/creasty/defaults"
+	"github.com/jellydator/validation"
 )
 
 // APIVersion is the current api version
@@ -36,15 +40,28 @@ func (c *Cluster) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return err
 	}
 
+	if err := defaults.Set(c); err != nil {
+		return fmt.Errorf("failed to set defaults: %w", err)
+	}
+
 	return nil
 }
 
 // Validate performs a configuration sanity check
 func (c *Cluster) Validate() error {
 	validation.ErrorTag = "yaml"
-	return validation.ValidateStruct(c,
-		validation.Field(&c.APIVersion, validation.Required, validation.In(APIVersion).Error("must equal "+APIVersion)),
-		validation.Field(&c.Kind, validation.Required, validation.In("cluster", "Cluster").Error("must equal Cluster")),
+	return validation.ValidateStruct(
+		c,
+		validation.Field(
+			&c.APIVersion,
+			validation.Required,
+			validation.In(APIVersion).Error("must equal "+APIVersion),
+		),
+		validation.Field(
+			&c.Kind,
+			validation.Required,
+			validation.In("cluster", "Cluster").Error("must equal Cluster"),
+		),
 		validation.Field(&c.Spec),
 	)
 }
